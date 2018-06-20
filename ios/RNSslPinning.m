@@ -7,6 +7,7 @@
 //
 
 #import "RNSslPinning.h"
+#import "AFNetworking.h"
 
 #if __has_include(<React/RCTBridge.h>)
 #import <React/RCTBridge.h>
@@ -142,33 +143,61 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
         session = [NSURLSession sessionWithConfiguration:self.sessionConfig];
     }
     
-    __block NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    
+    [[manager dataTaskWithRequest:request completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
+        
+        NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
+        
         if (!error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
-                NSInteger statusCode = httpResp.statusCode;
-                NSString *bodyString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                
-                
-                NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[httpResp allHeaderFields] forURL:[httpResp URL]];
-                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookies:cookies forURL:[httpResp URL] mainDocumentURL:nil];
-
-                
-                NSDictionary *res = @{
-                                      @"status": @(statusCode),
-                                      @"headers": httpResp.allHeaderFields,
-                                      @"bodyString": bodyString
-                                      };
-                callback(@[[NSNull null], res]);
-            });
+            NSLog(@"Reply JSON: %@", responseObject);
+            NSString *bodyString = [[NSString alloc] initWithData: responseObject encoding:NSUTF8StringEncoding];
+            NSInteger statusCode = httpResp.statusCode;
+            
+            NSDictionary *res = @{
+                                  @"status": @(statusCode),
+                                  @"headers": httpResp.allHeaderFields,
+                                  @"bodyString": bodyString
+                                  };
+            callback(@[[NSNull null], res]);
+            
+            
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
                 callback(@[@{@"message":error.localizedDescription}, [NSNull null]]);
             });
         }
-    }];
+    }] resume];
     
-    [dataTask resume];
+    
+//    __block NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+//        if (!error) {
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
+//                NSInteger statusCode = httpResp.statusCode;
+//                NSString *bodyString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+//
+//
+//                NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[httpResp allHeaderFields] forURL:[httpResp URL]];
+//                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookies:cookies forURL:[httpResp URL] mainDocumentURL:nil];
+//
+//
+//                NSDictionary *res = @{
+//                                      @"status": @(statusCode),
+//                                      @"headers": httpResp.allHeaderFields,
+//                                      @"bodyString": bodyString
+//                                      };
+//                callback(@[[NSNull null], res]);
+//            });
+//        } else {
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                callback(@[@{@"message":error.localizedDescription}, [NSNull null]]);
+//            });
+//        }
+//    }];
+//
+//    [dataTask resume];
 }
 
 @end
