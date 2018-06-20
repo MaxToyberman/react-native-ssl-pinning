@@ -109,18 +109,10 @@ RCT_REMAP_METHOD(getCookies, findEventsWithResolver:(RCTPromiseResolveBlock)reso
     }
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-    NSHTTPURLResponse *HTTPResponse = (NSHTTPURLResponse *)response;
-    NSDictionary *fields = [HTTPResponse allHeaderFields];
-    NSString *cookie = [fields valueForKey:@"Set-Cookie"]; // It is your cookie
-}
-
 RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTResponseSenderBlock)callback) {
     NSURL *u = [NSURL URLWithString:url];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:u];
-    NSURLConnection *connection = [NSURLConnection connectionWithRequest:request delegate:self];
-
+    
     NSURLSession *session;
     if (obj) {
         if (obj[@"method"]) {
@@ -157,9 +149,11 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
                 NSInteger statusCode = httpResp.statusCode;
                 NSString *bodyString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
                 
+                
                 NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[httpResp allHeaderFields] forURL:[httpResp URL]];
-                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookies:cookies forURL:[response URL] mainDocumentURL:nil];
+                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookies:cookies forURL:[httpResp URL] mainDocumentURL:nil];
 
+                
                 NSDictionary *res = @{
                                       @"status": @(statusCode),
                                       @"headers": httpResp.allHeaderFields,
