@@ -157,6 +157,9 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
                 NSInteger statusCode = httpResp.statusCode;
                 NSString *bodyString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
                 
+                NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[httpResp allHeaderFields] forURL:[httpResp URL]];
+                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookies:cookies forURL:[response URL] mainDocumentURL:nil];
+
                 NSDictionary *res = @{
                                       @"status": @(statusCode),
                                       @"headers": httpResp.allHeaderFields,
