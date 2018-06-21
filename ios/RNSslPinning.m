@@ -9,68 +9,6 @@
 #import "RNSslPinning.h"
 #import "AFNetworking.h"
 
-#if __has_include(<React/RCTBridge.h>)
-#import <React/RCTBridge.h>
-#else
-#import "RCTBridge.h"
-#endif
-
-@interface NSURLSessionSSLPinningDelegate:NSObject <NSURLSessionDelegate>
-
-- (id)initWithCertName:(NSString *)certName;
-
-@property (nonatomic, strong) NSString *certName;
-
-@end
-
-@implementation NSURLSessionSSLPinningDelegate
-
-- (id)initWithCertName:(NSString *)certName {
-    if (self = [super init]) {
-        _certName = certName;
-    }
-    return self;
-}
-
-- (NSArray *)pinnedCertificateData {
-    NSString *cerPath = [[NSBundle mainBundle] pathForResource:self.certName ofType:@"der"];
-    NSData *localCertData = [NSData dataWithContentsOfFile:cerPath];
-    
-    NSMutableArray *pinnedCertificates = [NSMutableArray array];
-    for (NSData *certificateData in @[localCertData]) {
-        [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
-    }
-    return pinnedCertificates;
-}
-
-- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
-    
-    if ([[[challenge protectionSpace] authenticationMethod] isEqualToString:NSURLAuthenticationMethodServerTrust]) {
-        NSString *domain = challenge.protectionSpace.host;
-        SecTrustRef serverTrust = [[challenge protectionSpace] serverTrust];
-        
-        NSArray *policies = @[(__bridge_transfer id)SecPolicyCreateSSL(true, (__bridge CFStringRef)domain)];
-        
-        SecTrustSetPolicies(serverTrust, (__bridge CFArrayRef)policies);
-        SecTrustSetAnchorCertificates(serverTrust, (__bridge CFArrayRef)self.pinnedCertificateData);
-        SecTrustResultType result;
-        
-        OSStatus errorCode = SecTrustEvaluate(serverTrust, &result);
-        
-        BOOL evaluatesAsTrusted = (result == kSecTrustResultUnspecified || result == kSecTrustResultProceed);
-        if (errorCode == errSecSuccess && evaluatesAsTrusted) {
-            NSURLCredential *credential = [NSURLCredential credentialForTrust:serverTrust];
-            completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
-        } else {
-            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
-        }
-    } else {
-        completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
-    }
-}
-
-@end
-
 @interface RNSslPinning()
 
 @property (nonatomic, strong) NSURLSessionConfiguration *sessionConfig;
@@ -114,7 +52,6 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     NSURL *u = [NSURL URLWithString:url];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:u];
     
-    NSURLSession *session;
     if (obj) {
         if (obj[@"method"]) {
             [request setHTTPMethod:obj[@"method"]];
@@ -136,14 +73,12 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
             [request setHTTPBody:data];
         }
     }
-    if (obj && obj[@"sslPinning"] && obj[@"sslPinning"][@"cert"]) {
-        NSURLSessionSSLPinningDelegate *delegate = [[NSURLSessionSSLPinningDelegate alloc] initWithCertName:obj[@"sslPinning"][@"cert"]];
-        session = [NSURLSession sessionWithConfiguration:self.sessionConfig delegate:delegate delegateQueue:[NSOperationQueue mainQueue]];
-    } else {
-        session = [NSURLSession sessionWithConfiguration:self.sessionConfig];
-    }
-    
+
+    AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
     AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+    manager.securityPolicy = policy;
+    
+
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
     
     [[manager dataTaskWithRequest:request completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
@@ -165,39 +100,12 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
             
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
+                NSInteger errorCode = error.code;
                 callback(@[@{@"message":error.localizedDescription}, [NSNull null]]);
             });
         }
     }] resume];
     
-    
-//    __block NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-//        if (!error) {
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
-//                NSInteger statusCode = httpResp.statusCode;
-//                NSString *bodyString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-//
-//
-//                NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[httpResp allHeaderFields] forURL:[httpResp URL]];
-//                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookies:cookies forURL:[httpResp URL] mainDocumentURL:nil];
-//
-//
-//                NSDictionary *res = @{
-//                                      @"status": @(statusCode),
-//                                      @"headers": httpResp.allHeaderFields,
-//                                      @"bodyString": bodyString
-//                                      };
-//                callback(@[[NSNull null], res]);
-//            });
-//        } else {
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                callback(@[@{@"message":error.localizedDescription}, [NSNull null]]);
-//            });
-//        }
-//    }];
-//
-//    [dataTask resume];
 }
 
 @end
