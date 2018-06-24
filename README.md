@@ -1,6 +1,7 @@
 
 # react-native-ssl-pinning
 
+React-Native Ssl pinning using OkHttp 3 in Android, and AFNetworking on iOS. 
 ## Getting started
 
 `$ npm install react-native-ssl-pinning --save`
@@ -34,20 +35,36 @@
       compile project(':react-native-ssl-pinning')
   	```
 
-#### Windows
-[Read it! :D](https://github.com/ReactWindows/react-native)
-
-1. In Visual Studio add the `RNSslPinning.sln` in `node_modules/react-native-ssl-pinning/windows/RNSslPinning.sln` folder to their solution, reference from their app.
-2. Open up your `MainPage.cs` app
-  - Add `using Ssl.Pinning.RNSslPinning;` to the usings at the top of the file
-  - Add `new RNSslPinningPackage()` to the `List<IReactPackage>` returned by the `Packages` method
-
 
 ## Usage
-```javascript
-import RNSslPinning from 'react-native-ssl-pinning';
 
-// TODO: What to do with the module?
-RNSslPinning;
+#### Create the certificates:
+1. openssl s_client -showcerts -google.com:443 (replace google with your domain)
+
+2. Copy the certificate (Usally the first one in the chain), and paste it using nano or other editor like so , nano mycert.pem
+3. convert it to .cer with this command
+openssl x509 -in mycert.pem -outform der -out mycert.cer 
+
+#### iOS
+ - drag mycert.cer to Xcode project, mark your target and 'Copy items if needed'
+
+#### Android
+ -  Place your .cer files under src/main/assets/.
+```javascript
+import {fetch} from 'react-native-ssl-pinning';
+
+fetch(url, {
+	method: "POST" ,
+	timeoutInterval: communication_timeout,
+	body: body,
+	headers: {
+		Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
+	}
+}).then(response => {
+	console.log(`response received ${response}`)
+})
+.catch(err => {
+	console.log(`error: ${err}`)
+})
 ```
   
