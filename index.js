@@ -10,7 +10,6 @@ module.exports = {
         var deferred = Q.defer();
         RNSslPinning.fetch(url, obj, (err, res) => {
             if (err) {
-                alert(err)
                 deferred.reject(err);
             } else {
                 res.json = function() {
