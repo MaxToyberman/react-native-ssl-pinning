@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
+import com.toyberman.BuildConfig;
 
 import org.json.JSONException;
 
@@ -54,8 +55,13 @@ public class OkHttpUtils {
 
             CertificatePinner certificatePinner = certificatePinnerBuilder.build();
 
-            client = new OkHttpClient.Builder()
-                    .addInterceptor(logging)
+            OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+
+            if (BuildConfig.DEBUG) {
+                clientBuilder.addInterceptor(logging);
+            }
+
+            client = clientBuilder
                     .cookieJar(cookieJar)
                     .certificatePinner(certificatePinner)
                     .build();
@@ -109,7 +115,9 @@ public class OkHttpUtils {
                                         inputstream = context.getContentResolver().openInputStream(uri);
                                         Utilities.copyInputStreamToFile(inputstream, file);
                                     } catch (FileNotFoundException e) {
-                                        e.printStackTrace();
+                                        if (BuildConfig.DEBUG) {
+                                            e.printStackTrace();
+                                        }
                                     }
                                     //add file to body if exists
                                     if (file.exists()) {

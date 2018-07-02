@@ -3,6 +3,9 @@ package com.toyberman.Utils;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 
+
+import com.toyberman.BuildConfig;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +32,9 @@ public class Utilities {
                 out.write(buf, 0, len);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            if (BuildConfig.DEBUG) {
+                e.printStackTrace();
+            }
         } finally {
             // Ensure that the InputStreams are closed even if there's an exception.
             try {
@@ -41,7 +46,9 @@ public class Utilities {
                 // from here but ensure that you close it yourself eventually.
                 in.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                if (BuildConfig.DEBUG) {
+                    e.printStackTrace();
+                }
             }
         }
     }

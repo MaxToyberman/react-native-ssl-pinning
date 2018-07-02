@@ -50,6 +50,9 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         if (options.hasKey(OPT_SSL_PINNING_KEY)) {
             if (options.getMap(OPT_SSL_PINNING_KEY).hasKey("certs")) {
                 ReadableArray certs = options.getMap(OPT_SSL_PINNING_KEY).getArray("certs");
+                if (certs.size() == 0) {
+                    throw new RuntimeException("certs array is empty");
+                }
                 if (certs != null) {
                     client = OkHttpUtils.buildOkHttpClient(cookieJar, hostname, certs);
                 }
@@ -63,7 +66,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         }
 
         try {
-            Request request = OkHttpUtils.buildRequest(this.reactContext,options, hostname);
+            Request request = OkHttpUtils.buildRequest(this.reactContext, options, hostname);
 
             Response okHttpResponse = client.newCall(request).execute();
 
