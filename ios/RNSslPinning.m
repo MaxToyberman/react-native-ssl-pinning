@@ -86,7 +86,7 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
         NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
         
         if (!error) {
-            NSLog(@"Reply JSON: %@", responseObject);
+            
             NSString *bodyString = [[NSString alloc] initWithData: responseObject encoding:NSUTF8StringEncoding];
             NSInteger statusCode = httpResp.statusCode;
             
