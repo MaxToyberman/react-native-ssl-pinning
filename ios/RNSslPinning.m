@@ -108,5 +108,10 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     
 }
 
++ (BOOL)requiresMainQueueSetup
+{
+   return YES;
+}
+
 @end
 
