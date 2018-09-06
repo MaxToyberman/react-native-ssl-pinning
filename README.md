@@ -39,7 +39,7 @@ React-Native Ssl pinning using OkHttp 3 in Android, and AFNetworking on iOS.
 ## Usage
 
 #### Create the certificates:
-1. openssl s_client -showcerts -google.com:443 (replace google with your domain)
+1. openssl s_client -showcerts -connect google.com:443 (replace google with your domain)
 
 2. Copy the certificate (Usally the first one in the chain), and paste it using nano or other editor like so , nano mycert.pem
 3. convert it to .cer with this command
