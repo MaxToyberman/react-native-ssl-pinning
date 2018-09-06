@@ -14,6 +14,7 @@ import org.json.JSONException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.CertificatePinner;
 import okhttp3.CookieJar;
@@ -38,7 +39,7 @@ public class OkHttpUtils {
     private static String content_type = "application/json; charset=utf-8";
     public static MediaType mediaType = MediaType.parse(content_type);
 
-    public static OkHttpClient buildOkHttpClient(CookieJar cookieJar, String hostname, ReadableArray certs) {
+    public static OkHttpClient buildOkHttpClient(CookieJar cookieJar, String hostname, ReadableArray certs, ReadableMap options) {
         if (client == null) {
             //add logging interceptor
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
@@ -56,6 +57,13 @@ public class OkHttpUtils {
             CertificatePinner certificatePinner = certificatePinnerBuilder.build();
 
             OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+
+            if (options.hasKey("timeoutInterval")) {
+                int timeout = options.getInt("timeoutInterval");
+                clientBuilder
+                        .readTimeout(timeout, TimeUnit.MILLISECONDS);
+            }
+
 
             if (BuildConfig.DEBUG) {
                 clientBuilder.addInterceptor(logging);

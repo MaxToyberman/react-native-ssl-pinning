@@ -134,7 +134,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                     throw new RuntimeException("certs array is empty");
                 }
                 if (certs != null) {
-                    client = OkHttpUtils.buildOkHttpClient(cookieJar, hostname, certs);
+                    client = OkHttpUtils.buildOkHttpClient(cookieJar, hostname, certs, options);
                 }
             } else {
                 promise.reject(new Throwable("key certs was not found"));
