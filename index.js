@@ -6,7 +6,7 @@ var Q = require('q');
 
 module.exports = {
     getCookies : RNSslPinning.getCookies,
-    fetch: Platform.OS === 'android' ? RNSslPinning.fetch : function (url, obj, callback) {
+    fetch: function (url, obj, callback) {
         var deferred = Q.defer();
         RNSslPinning.fetch(url, obj, (err, res) => {
             if (err) {

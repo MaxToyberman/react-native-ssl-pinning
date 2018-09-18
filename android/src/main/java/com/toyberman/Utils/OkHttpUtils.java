@@ -11,10 +11,18 @@ import com.toyberman.BuildConfig;
 
 import org.json.JSONException;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 import okhttp3.CertificatePinner;
 import okhttp3.CookieJar;
@@ -36,26 +44,46 @@ public class OkHttpUtils {
     private static final String METHOD_KEY = "method";
     private static final String FILE = "file";
     private static OkHttpClient client = null;
+    private static SSLContext sslContext;
     private static String content_type = "application/json; charset=utf-8";
     public static MediaType mediaType = MediaType.parse(content_type);
 
     public static OkHttpClient buildOkHttpClient(CookieJar cookieJar, String hostname, ReadableArray certs, ReadableMap options) {
         if (client == null) {
-            //add logging interceptor
+            // add logging interceptor
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            
+            // SSLFactory
+            try {
+                sslContext = SSLContext.getInstance("TLS");
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                String keyStoreType = KeyStore.getDefaultType();
+                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+                keyStore.load(null, null);
 
-            CertificatePinner.Builder certificatePinnerBuilder = new CertificatePinner.Builder();
-            //get domain
-            int slashslash = hostname.indexOf("//") + 2;
-            String domain = hostname.substring(slashslash, hostname.indexOf('/', slashslash));
-            //add all keys to the certficates pinner
-            for (int i = 0; i < certs.size(); i++) {
-                certificatePinnerBuilder.add(domain, certs.getString(i));
+                for (int i = 0; i < certs.size(); i++) {
+                    String filename = certs.getString(i);
+                    InputStream caInput = new BufferedInputStream(OkHttpUtils.class.getClassLoader().getResourceAsStream("assets/" + filename + ".cer"));
+                    Certificate ca;
+                    try {
+                        ca = cf.generateCertificate(caInput);
+                    } finally {
+                        caInput.close();
+                    }
+
+                    keyStore.setCertificateEntry(filename, ca);
+                }
+
+                String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+                tmf.init(keyStore);
+
+                sslContext.init(null, tmf.getTrustManagers(), null);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            CertificatePinner certificatePinner = certificatePinnerBuilder.build();
-
+            
             OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
 
             if (options.hasKey("timeoutInterval")) {
@@ -71,7 +99,7 @@ public class OkHttpUtils {
 
             client = clientBuilder
                     .cookieJar(cookieJar)
-                    .certificatePinner(certificatePinner)
+                    .sslSocketFactory(sslContext.getSocketFactory())
                     .build();
 
         }
