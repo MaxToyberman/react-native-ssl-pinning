@@ -113,8 +113,11 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
             WritableMap map = new WritableNativeMap();
 
             List<Cookie> cookies = cookieStore.get(getDomainName(domain));
-            for (Cookie cookie : cookies) {
-                map.putString(cookie.name(), cookie.value());
+            
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    map.putString(cookie.name(), cookie.value());
+                }
             }
 
             promise.resolve(map);
