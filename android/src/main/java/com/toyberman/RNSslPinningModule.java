@@ -106,6 +106,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         return domain.startsWith("www.") ? domain.substring(4) : domain;
     }
 
+
     @ReactMethod
     public void getCookies(String domain, final Promise promise) {
         try {
@@ -118,6 +119,32 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
             promise.resolve(map);
         } catch (Exception e) {
+            promise.reject(e);
+        }
+    }
+
+
+    @ReactMethod
+    public void removeCookieByName(String domain, String cookieName, final Promise promise) {
+        List<Cookie> cookies = null;
+        try {
+            String parsedDomainName = getDomainName(domain);
+            cookies = cookieStore.get(parsedDomainName);
+            for (Cookie cookie : cookies) {
+                if (cookie.name().equals(cookieName)) {
+                    cookies.remove(cookie);
+                }
+            }
+            cookieStore.put(parsedDomainName, cookies);
+            // construct new cookies list and return it.
+            WritableMap map = new WritableNativeMap();
+
+            for (Cookie cookie : cookies) {
+                map.putString(cookie.name(), cookie.value());
+            }
+            promise.resolve(map);
+
+        } catch (URISyntaxException e) {
             promise.reject(e);
         }
     }
