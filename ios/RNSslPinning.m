@@ -48,6 +48,25 @@ RCT_REMAP_METHOD(getCookies, findEventsWithResolver:(RCTPromiseResolveBlock)reso
     }
 }
 
+
+RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+    
+    NSHTTPCookieStorage *cookieStorage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
+    for (NSHTTPCookie *cookie in cookieStorage.cookies) {
+        // [cookieStorage deleteCookie:each];
+        NSString * name = cookie.name;
+    
+        if([cookieName isEqualToString:name]) {
+            [cookieStorage deleteCookie:cookie];
+        }
+    }
+    
+    resolve(nil);
+    
+}
+
 RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTResponseSenderBlock)callback) {
     NSURL *u = [NSURL URLWithString:url];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:u];
