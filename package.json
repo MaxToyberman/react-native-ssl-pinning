@@ -11,6 +11,9 @@
     "react-native"
   ],
   "author": "Max Toyberman",
+  "dependencies": {
+    "q": "^1.4.1"
+  },
   "license": "",
   "peerDependencies": {
     "react-native": "^0.41.2"

@@ -3,6 +3,7 @@ package com.toyberman;
 import android.support.annotation.NonNull;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -112,8 +113,11 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
             WritableMap map = new WritableNativeMap();
 
             List<Cookie> cookies = cookieStore.get(getDomainName(domain));
-            for (Cookie cookie : cookies) {
-                map.putString(cookie.name(), cookie.value());
+            
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    map.putString(cookie.name(), cookie.value());
+                }
             }
 
             promise.resolve(map);
@@ -123,7 +127,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void fetch(String hostname, ReadableMap options, Promise promise) {
+    public void fetch(String hostname, ReadableMap options, Callback callback) {
 
         WritableMap response = Arguments.createMap();
         // With ssl pinning
@@ -137,11 +141,11 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                     client = OkHttpUtils.buildOkHttpClient(cookieJar, hostname, certs, options);
                 }
             } else {
-                promise.reject(new Throwable("key certs was not found"));
+                callback.invoke(new Throwable("key certs was not found"), null);
             }
         } else {
             //no ssl pinning
-            promise.reject(new Throwable("sslPinning key was not added"));
+            callback.invoke(new Throwable("sslPinning key was not added"), null);
             return;
         }
 
@@ -160,12 +164,12 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                 response.putString("bodyString", stringResponse);
                 response.putMap("headers", headers);
 
-                promise.resolve(response);
+                callback.invoke(null, response);
             } else {
-                promise.reject(Integer.toString(okHttpResponse.code()), okHttpResponse.message());
+                callback.invoke(Integer.toString(okHttpResponse.code()), okHttpResponse.message(), null);
             }
         } catch (IOException | JSONException e) {
-            promise.reject(e);
+            callback.invoke(e, null);
         }
 
     }
