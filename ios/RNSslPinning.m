@@ -28,14 +28,14 @@ RCT_EXPORT_MODULE();
     return self;
 }
 
-RCT_REMAP_METHOD(getCookies, findEventsWithResolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(getCookies: (NSURL *)url resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
     
     NSHTTPCookie *cookie;
     NSHTTPCookieStorage* cookieJar  =  NSHTTPCookieStorage.sharedHTTPCookieStorage;
     
     NSMutableDictionary* dictionary = @{}.mutableCopy;
     
-    for (cookie in [cookieJar cookies]) {
+    for (cookie in [cookieJar cookiesForURL:url]) {
         [dictionary setObject:cookie.value forKey:cookie.name];
     }
     
@@ -133,4 +133,3 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
 }
 
 @end
-
