@@ -125,30 +125,24 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
 
     @ReactMethod
-    public void removeCookieByName(String domain, String cookieName, final Promise promise) {
+    public void removeCookieByName(String cookieName, final Promise promise) {
         List<Cookie> cookies = null;
-        List<Cookie> newCookiesList = new ArrayList<>();
 
-        WritableMap map = new WritableNativeMap();
-        try {
-            String parsedDomainName = getDomainName(domain);
-            cookies = cookieStore.get(parsedDomainName);
+        for (String domain : cookieStore.keySet()) {
+            List<Cookie> newCookiesList = new ArrayList<>();
+
+            cookies = cookieStore.get(domain);
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     if (!cookie.name().equals(cookieName)) {
                         newCookiesList.add(cookie);
                     }
                 }
-                cookieStore.put(parsedDomainName, newCookiesList);
-                // construct new cookies list and return it.
-                for (Cookie cookie : newCookiesList) {
-                    map.putString(cookie.name(), cookie.value());
-                }
+                cookieStore.put(domain, newCookiesList);
             }
-            promise.resolve(map);
-        } catch (URISyntaxException e) {
-            promise.reject(e);
         }
+
+        promise.resolve(null);
     }
 
     @ReactMethod
