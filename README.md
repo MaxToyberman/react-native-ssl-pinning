@@ -51,7 +51,7 @@ openssl x509 -in mycert.pem -outform der -out mycert.cer
 #### Android
  -  Place your .cer files under src/main/assets/.
 ```javascript
-import {fetch} from 'react-native-ssl-pinning';
+import {fetch, removeCookieByName} from 'react-native-ssl-pinning';
 
 fetch(url, {
 	method: "POST" ,
@@ -70,5 +70,15 @@ fetch(url, {
 .catch(err => {
 	console.log(`error: ${err}`)
 })
+
+removeCookieByName('cookieName')
+	.then(res =>{
+		    console.log('removeCookieByName');
+	})
+
+getCookies('domain')
+	.then(cookies => {
+		// do what you need with your cookies
+	})
 ```
   
