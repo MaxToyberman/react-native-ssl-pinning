@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import okhttp3.Call;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.Headers;
@@ -114,7 +115,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
             WritableMap map = new WritableNativeMap();
 
             List<Cookie> cookies = cookieStore.get(getDomainName(domain));
-            
+
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     map.putString(cookie.name(), cookie.value());
@@ -150,9 +151,9 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void fetch(String hostname, ReadableMap options, Callback callback) {
+    public void fetch(String hostname, ReadableMap options, final Callback callback) {
 
-        WritableMap response = Arguments.createMap();
+        final WritableMap response = Arguments.createMap();
         // With ssl pinning
         if (options.hasKey(OPT_SSL_PINNING_KEY)) {
             if (options.getMap(OPT_SSL_PINNING_KEY).hasKey("certs")) {
@@ -175,23 +176,33 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         try {
             Request request = OkHttpUtils.buildRequest(this.reactContext, options, hostname);
 
-            Response okHttpResponse = client.newCall(request).execute();
+            client.newCall(request).enqueue(new okhttp3.Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    callback.invoke(e, null);
+                }
 
-            if (okHttpResponse.isSuccessful()) {
+                @Override
+                public void onResponse(Call call, Response okHttpResponse) throws IOException {
+                    if (okHttpResponse.isSuccessful()) {
 
-                String stringResponse = okHttpResponse.body().string();
-                //build response headers map
-                WritableMap headers = buildResponseHeaders(okHttpResponse);
-                //set response status code
-                response.putInt("status", okHttpResponse.code());
-                response.putString("bodyString", stringResponse);
-                response.putMap("headers", headers);
+                        String stringResponse = okHttpResponse.body().string();
+                        //build response headers map
+                        WritableMap headers = buildResponseHeaders(okHttpResponse);
+                        //set response status code
+                        response.putInt("status", okHttpResponse.code());
+                        response.putString("bodyString", stringResponse);
+                        response.putMap("headers", headers);
 
-                callback.invoke(null, response);
-            } else {
-                callback.invoke(Integer.toString(okHttpResponse.code()), okHttpResponse.message(), null);
-            }
-        } catch (IOException | JSONException e) {
+                        callback.invoke(null, response);
+                    } else {
+                        callback.invoke(Integer.toString(okHttpResponse.code()), okHttpResponse.message(), null);
+                    }
+                }
+            });
+
+
+        } catch (JSONException e) {
             callback.invoke(e, null);
         }
 
