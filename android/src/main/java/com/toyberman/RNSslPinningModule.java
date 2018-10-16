@@ -179,7 +179,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
             client.newCall(request).enqueue(new okhttp3.Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    callback.invoke(e, null);
+                    callback.invoke(e.getMessage());
                 }
 
                 @Override
