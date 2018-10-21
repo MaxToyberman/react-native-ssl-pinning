@@ -5,26 +5,27 @@ import android.net.Uri;
 
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.toyberman.BuildConfig;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import okhttp3.CertificatePinner;
 import okhttp3.CookieJar;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -53,7 +54,7 @@ public class OkHttpUtils {
             // add logging interceptor
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-            
+
             // SSLFactory
             try {
                 sslContext = SSLContext.getInstance("TLS");
@@ -83,7 +84,7 @@ public class OkHttpUtils {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
             OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
 
             if (options.hasKey("timeoutInterval")) {
@@ -99,7 +100,7 @@ public class OkHttpUtils {
 
             client = clientBuilder
                     .cookieJar(cookieJar)
-                    .sslSocketFactory(sslContext.getSocketFactory())
+                    //.sslSocketFactory(sslContext.getSocketFactory())
                     .build();
 
         }
@@ -110,7 +111,7 @@ public class OkHttpUtils {
 
         Request.Builder requestBuilder = new Request.Builder();
         MultipartBody.Builder multipartBodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-
+        multipartBodyBuilder.setType((MediaType.parse("multipart/form-data")));
         RequestBody body = null;
 
         String method = "GET";
@@ -130,52 +131,77 @@ public class OkHttpUtils {
                 case String:
                     body = RequestBody.create(mediaType, options.getString(BODY_KEY));
                     break;
-                case Array:
-                    //get array from body
-                    ReadableArray bodyArray = options.getArray(BODY_KEY);
-                    for (int i = 0; i < bodyArray.size(); i++) {
-                        //get body object at index i
-                        ReadableMap bodyPart = bodyArray.getMap(i);
-                        ReadableMapKeySetIterator iterator = bodyPart.keySetIterator();
-                        //loop over the keys of each object
-                        while (iterator.hasNextKey()) {
-                            String key = iterator.nextKey();
-                            if (key.equals(FILE)) {
-                                ReadableMap fileMap = bodyPart.getMap(key);
-                                if (fileMap.hasKey("uri")) {
-                                    Uri uri = Uri.parse(fileMap.getString("uri"));
-                                    InputStream inputstream;
-                                    File file = null;
-                                    try {
-                                        file = new File(context.getCacheDir(), fileMap.getString("fileName"));
-                                        inputstream = context.getContentResolver().openInputStream(uri);
-                                        Utilities.copyInputStreamToFile(inputstream, file);
-                                    } catch (FileNotFoundException e) {
-                                        if (BuildConfig.DEBUG) {
+                case Map:
+                    ReadableMap bodyMap = options.getMap(BODY_KEY);
+                    if (bodyMap.hasKey("formData")) {
+                        ReadableMap formData = bodyMap.getMap("formData");
+
+                        if (formData.hasKey("_parts")) {
+                            ReadableArray parts = formData.getArray("_parts");
+                            for (int i = 0; i < parts.size(); i++) {
+                                ReadableArray part = parts.getArray(i);
+
+
+                                if (part.getType(0) == ReadableType.String) {
+                                    String key = part.getString(0);
+
+                                    if (key.equals("file")) {
+
+                                        ReadableMap fileData = part.getMap(1);
+
+                                        Uri _uri = Uri.parse(fileData.getString("uri"));
+
+                                        String type = fileData.getString("type");
+
+                                        String fileName = fileData.getString("fileName");
+                                        File file = null;
+                                        try {
+                                            file = getTempFile(context, _uri);
+                                            multipartBodyBuilder.addFormDataPart(key, fileName, RequestBody.create(MediaType.parse(type), file));
+
+                                        } catch (IOException e) {
                                             e.printStackTrace();
                                         }
+
+                                    } else {
+                                        String value = part.getString(1);
+                                        multipartBodyBuilder.addFormDataPart(key, value);
                                     }
-                                    //add file to body if exists
-                                    if (file.exists()) {
-                                        final MediaType MEDIA_TYPE = MediaType.parse(fileMap.getString("type"));
-                                        multipartBodyBuilder.addFormDataPart("file", fileMap.getString("fileName"), RequestBody.create(MEDIA_TYPE, file));
-                                    }
+
                                 }
 
-                            } else {
-                                //some param
-                                multipartBodyBuilder.addFormDataPart(key, bodyPart.getString(key));
+
                             }
+                            body = multipartBodyBuilder.build();
+                        } else {
+                            String bodyString = new JSONObject(options.getMap(BODY_KEY).getMap("formData").toHashMap()).toString();
+
+                            body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), bodyString);
                         }
+
                     }
-                    body = multipartBodyBuilder.build();
+
                     break;
             }
 
         }
-        return requestBuilder.url(hostname)
+        return requestBuilder
+                .url(hostname)
                 .method(method, body)
                 .build();
+    }
+
+    public static File getTempFile(Context context, Uri uri) throws IOException {
+        File file = File.createTempFile("media", null);
+        InputStream inputStream = context.getContentResolver().openInputStream(uri);
+        OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = inputStream.read(buffer)) != -1)
+            outputStream.write(buffer, 0, len);
+        inputStream.close();
+        outputStream.close();
+        return file;
     }
 
     private static void setRequestHeaders(ReadableMap options, Request.Builder requestBuilder) {
