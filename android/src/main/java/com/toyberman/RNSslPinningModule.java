@@ -184,19 +184,18 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
                 @Override
                 public void onResponse(Call call, Response okHttpResponse) throws IOException {
+                    String stringResponse = okHttpResponse.body().string();
+                    //build response headers map
+                    WritableMap headers = buildResponseHeaders(okHttpResponse);
+                    //set response status code
+                    response.putInt("status", okHttpResponse.code());
+                    response.putString("bodyString", stringResponse);
+                    response.putMap("headers", headers);
+
                     if (okHttpResponse.isSuccessful()) {
-
-                        String stringResponse = okHttpResponse.body().string();
-                        //build response headers map
-                        WritableMap headers = buildResponseHeaders(okHttpResponse);
-                        //set response status code
-                        response.putInt("status", okHttpResponse.code());
-                        response.putString("bodyString", stringResponse);
-                        response.putMap("headers", headers);
-
                         callback.invoke(null, response);
                     } else {
-                        callback.invoke(Integer.toString(okHttpResponse.code()), okHttpResponse.message(), null);
+                        callback.invoke(response, null);
                     }
                 }
             });
