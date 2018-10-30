@@ -120,7 +120,7 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
             });
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
-                callback(@[@{@"message":error.localizedDescription}, [NSNull null]]);
+                callback(@[error.localizedDescription, [NSNull null]]);
             });
         }
     }] resume];
