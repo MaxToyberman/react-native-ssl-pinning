@@ -63,7 +63,7 @@ public class Utilities {
         ReadableMapKeySetIterator iterator = map.keySetIterator();
         while (iterator.hasNextKey()) {
             String key = iterator.nextKey();
-            builder.addHeader(key, map.getString(key).toLowerCase());
+            builder.addHeader(key, map.getString(key));
         }
     }
 
