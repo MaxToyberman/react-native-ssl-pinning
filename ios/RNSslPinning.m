@@ -106,17 +106,19 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
         NSString *bodyString = [[NSString alloc] initWithData: responseObject encoding:NSUTF8StringEncoding];
         NSInteger statusCode = httpResp.statusCode;
 
-        NSDictionary *res = @{
-            @"status": @(statusCode),
-            @"headers": httpResp.allHeaderFields,
-            @"bodyString": bodyString
-        };
-
         if (!error) {
-            callback(@[[NSNull null], res]);
+            callback(@[[NSNull null], @{
+                @"status": @(statusCode),
+                @"headers": httpResp.allHeaderFields,
+                @"bodyString": bodyString
+            }]);
         } else if (error && error.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey]) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                callback(@[res, [NSNull null]]);
+                callback(@[@{
+                    @"status": @(statusCode),
+                    @"headers": httpResp.allHeaderFields,
+                    @"bodyString": bodyString
+                }, [NSNull null]]);
             });
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
