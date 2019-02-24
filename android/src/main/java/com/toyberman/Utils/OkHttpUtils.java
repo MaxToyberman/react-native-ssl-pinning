@@ -173,12 +173,7 @@ public class OkHttpUtils {
 
                             }
                             body = multipartBodyBuilder.build();
-                        } else {
-                            String bodyString = new JSONObject(options.getMap(BODY_KEY).getMap("formData").toHashMap()).toString();
-
-                            body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), bodyString);
                         }
-
                     }
 
                     break;
