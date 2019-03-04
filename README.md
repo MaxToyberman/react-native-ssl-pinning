@@ -80,5 +80,39 @@ getCookies('domain')
 	.then(cookies => {
 		// do what you need with your cookies
 	})
+
 ```
-  
+  ## Multipart request (FormData)
+
+```javascript
+let formData = new FormData()
+
+#You could add a key/value pair to this using #FormData.append:
+
+formData.append('username', 'Chris');
+
+# Adding a file to the request
+formData.append('file', {
+		name: encodeURIComponent(response.fileName),
+		fileName: encodeURIComponent(response.fileName),
+		type: this._extractFileType(response.fileName),
+		uri: response.uri,
+		data: response.data // needed for ios in base64
+})
+
+fetch(url, {
+	method: "POST" ,
+	timeoutInterval: communication_timeout,
+	body: {
+				formData: request,
+	},
+	sslPinning: {
+		certs: ["cert1","cert2"]
+	},
+	headers: {
+				'content-type': 'multipart/form-data; charset=UTF-8',
+				accept: 'application/json, text/plain, /',
+		}
+})
+
+```
