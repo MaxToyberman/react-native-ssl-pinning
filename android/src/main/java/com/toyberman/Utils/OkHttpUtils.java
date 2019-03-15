@@ -124,7 +124,7 @@ public class OkHttpUtils {
         }
 
         if (options.hasKey(BODY_KEY)) {
-            method = "POST";
+
             ReadableType bodyType = options.getType(BODY_KEY);
             switch (bodyType) {
                 case String:
