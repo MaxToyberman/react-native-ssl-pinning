@@ -1,6 +1,7 @@
 package com.toyberman;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -12,6 +13,8 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.facebook.react.modules.network.ForwardingCookieHandler;
+import com.facebook.react.modules.network.ReactCookieJarContainer;
 import com.toyberman.Utils.OkHttpUtils;
 
 import org.json.JSONException;
@@ -20,8 +23,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import okhttp3.Call;
@@ -41,22 +46,21 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
     private final ReactApplicationContext reactContext;
     private final HashMap<String, List<Cookie>> cookieStore;
     private CookieJar cookieJar = null;
+    private ForwardingCookieHandler cookieHandler;
     private OkHttpClient client;
 
     public RNSslPinningModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
         cookieStore = new HashMap<>();
+        cookieHandler = new ForwardingCookieHandler(reactContext);
         cookieJar = new CookieJar() {
 
-
             @Override
-            public synchronized void saveFromResponse(HttpUrl url, List<Cookie> unmodifiableCookieList) {
-
+            public synchronized void saveFromResponse(HttpUrl url, List<Cookie> unmodifiableCookieList)  {
                 for (Cookie cookie : unmodifiableCookieList) {
                     setCookie(url, cookie);
                 }
-
             }
 
             @Override
@@ -64,7 +68,6 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                 List<Cookie> cookies = cookieStore.get(url.host());
                 return cookies != null ? cookies : new ArrayList<Cookie>();
             }
-
 
             public void setCookie(HttpUrl url, Cookie cookie) {
 
@@ -75,13 +78,18 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                     cookieListForUrl = new ArrayList<Cookie>();
                     cookieStore.put(host, cookieListForUrl);
                 }
-                putCookie(cookieListForUrl, cookie);
-
+                try {
+                    putCookie(url, cookieListForUrl, cookie);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
-            private void putCookie(List<Cookie> storedCookieList, Cookie newCookie) {
+            private void putCookie(HttpUrl url, List<Cookie> storedCookieList, Cookie newCookie) throws URISyntaxException, IOException {
 
                 Cookie oldCookie = null;
+                Map<String, List<String>> cookieMap = new HashMap<>();
+
                 for (Cookie storedCookie : storedCookieList) {
 
                     // create key for comparison
@@ -97,6 +105,9 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                     storedCookieList.remove(oldCookie);
                 }
                 storedCookieList.add(newCookie);
+
+                cookieMap.put("Set-cookie", Collections.singletonList(newCookie.toString()));
+                cookieHandler.put(url.uri(), cookieMap);
             }
         };
 
@@ -184,19 +195,18 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
                 @Override
                 public void onResponse(Call call, Response okHttpResponse) throws IOException {
+                    String stringResponse = okHttpResponse.body().string();
+                    //build response headers map
+                    WritableMap headers = buildResponseHeaders(okHttpResponse);
+                    //set response status code
+                    response.putInt("status", okHttpResponse.code());
+                    response.putString("bodyString", stringResponse);
+                    response.putMap("headers", headers);
+
                     if (okHttpResponse.isSuccessful()) {
-
-                        String stringResponse = okHttpResponse.body().string();
-                        //build response headers map
-                        WritableMap headers = buildResponseHeaders(okHttpResponse);
-                        //set response status code
-                        response.putInt("status", okHttpResponse.code());
-                        response.putString("bodyString", stringResponse);
-                        response.putMap("headers", headers);
-
                         callback.invoke(null, response);
                     } else {
-                        callback.invoke(Integer.toString(okHttpResponse.code()), okHttpResponse.message(), null);
+                        callback.invoke(response, null);
                     }
                 }
             });

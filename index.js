@@ -1,35 +1,43 @@
-
 import { NativeModules, Platform } from 'react-native';
 
 const { RNSslPinning } = NativeModules;
-var Q = require('q');
+let Q = require('q');
 
 module.exports = {
     getCookies : RNSslPinning.getCookies,
     removeCookieByName: RNSslPinning.removeCookieByName,
     fetch: function (url, obj, callback) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
         RNSslPinning.fetch(url, obj, (err, res) => {
-            if (err) {
+            if (err && typeof err != 'object') {
                 deferred.reject(err);
-            } else {
-                res.json = function() {
-                    return Q.fcall(function () {
-                        return JSON.parse(res.bodyString);
-                    });
-                };
-                res.text = function() {
-                    return Q.fcall(function () {
-                        return res.bodyString;
-                    });
-                };
-                res.url = url;
+            }
 
-                deferred.resolve(res);
+            let data = err || res;
+
+            data.json = function() {
+                return Q.fcall(function() {
+                    return JSON.parse(data.bodyString);
+                });
+            };
+
+            data.text = function() {
+                return Q.fcall(function() {
+                    return data.bodyString;
+                });
+            };
+
+            data.url = url;
+
+            if (err) {
+                deferred.reject(data);
+            } else {
+                deferred.resolve(data);
             }
 
             deferred.promise.nodeify(callback);
         });
+
         return deferred.promise;
     }
 }
