@@ -231,12 +231,11 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
                 NSData *data = [obj[@"body"] dataUsingEncoding:NSUTF8StringEncoding];
                 [request setHTTPBody:data];
                 
-                [self performRequest:manager request:request callback:callback ];
                 //TODO: if no body
             }
             
         }
-
+        [self performRequest:manager request:request callback:callback ];
     }
     else {
         
