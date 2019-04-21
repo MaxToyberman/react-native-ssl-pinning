@@ -1,13 +1,13 @@
 // @flow
-declare type Header = {
+export type Header = {
     [headerName: string]: string;
 }
 
-declare type Cookies = {
+export type Cookies = {
     [cookieName: string]: string;
 }
 
-declare type Options = {
+export type Options = {
     body?: string,
     credentials?: string,
     headers?: Header;
@@ -18,7 +18,7 @@ declare type Options = {
     timeoutInterval?: number,
 }
 
-declare type Response = {
+export type Response = {
     bodyString: string;
     headers: Header;
     status: number;
