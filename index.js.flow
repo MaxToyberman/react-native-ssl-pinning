@@ -8,9 +8,9 @@ export type Cookies = {
 }
 
 export type Options = {
-    body?: string,
+    body?: string | {},
     credentials?: string,
-    headers?: Header;
+    headers?: Header,
     method?: 'DELETE' | 'GET' | 'POST' | 'PUT',
     sslPinning: {
         certs: Array<string>
@@ -19,10 +19,12 @@ export type Options = {
 }
 
 export type Response = {
-    bodyString: string;
-    headers: Header;
-    status: number;
-    url: string;
+    bodyString: string,
+    headers: Header,
+    status: number,
+    url: string,
+    json: () => Promise<{}>,
+    text: () => Promise<string>,
 }
 
 declare export function fetch(url: string, options: Options): Promise<Response>;
