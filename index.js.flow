@@ -23,7 +23,7 @@ export type Response = {
     headers: Header,
     status: number,
     url: string,
-    json: () => Promise<{}>,
+    json: () => Promise<{ [key: string]: any}>,
     text: () => Promise<string>,
 }
 

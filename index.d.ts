@@ -23,7 +23,7 @@ export namespace ReactNativeSSLPinning {
         headers: Header;
         status: number;
         url: string;
-        json:() => Promise<object>;
+        json: () => Promise<{ [key: string]: any}>;
         text: () => Promise<string>;
     }
 }
