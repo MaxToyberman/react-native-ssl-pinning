@@ -1,43 +1,61 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules } from 'react-native';
+import Q from 'q'
 
 const { RNSslPinning } = NativeModules;
-let Q = require('q');
 
-module.exports = {
-    getCookies : RNSslPinning.getCookies,
-    removeCookieByName: RNSslPinning.removeCookieByName,
-    fetch: function (url, obj, callback) {
-        let deferred = Q.defer();
-        RNSslPinning.fetch(url, obj, (err, res) => {
-            if (err && typeof err != 'object') {
-                deferred.reject(err);
-            }
+const fetch = (url, obj, callback) => {
+    let deferred = Q.defer();
+    RNSslPinning.fetch(url, obj, (err, res) => {
+        if (err && typeof err != 'object') {
+            deferred.reject(err);
+        }
 
-            let data = err || res;
+        let data = err || res;
 
-            data.json = function() {
-                return Q.fcall(function() {
-                    return JSON.parse(data.bodyString);
-                });
-            };
+        data.json = function() {
+            return Q.fcall(function() {
+                return JSON.parse(data.bodyString);
+            });
+        };
 
-            data.text = function() {
-                return Q.fcall(function() {
-                    return data.bodyString;
-                });
-            };
+        data.text = function() {
+            return Q.fcall(function() {
+                return data.bodyString;
+            });
+        };
 
-            data.url = url;
+        data.url = url;
 
-            if (err) {
-                deferred.reject(data);
-            } else {
-                deferred.resolve(data);
-            }
+        if (err) {
+            deferred.reject(data);
+        } else {
+            deferred.resolve(data);
+        }
 
-            deferred.promise.nodeify(callback);
-        });
+        deferred.promise.nodeify(callback);
+    });
 
-        return deferred.promise;
+    return deferred.promise;
+};
+
+const getCookies = (domain) => {
+    if(domain) {
+        return RNSslPinning.getCookies(domain);
     }
+
+    return Promise.reject("Domain cannot be empty")
+};
+
+const removeCookieByName = (name) => {
+    if(name) {
+        return RNSslPinning.removeCookieByName(name);
+    }
+
+    return Promise.reject("Cookie Name cannot be empty")
+};
+
+export {
+    fetch,
+    getCookies,
+    removeCookieByName
 }
