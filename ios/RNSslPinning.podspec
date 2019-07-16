@@ -1,13 +1,14 @@
+require 'json'
+
+package = JSON.parse(File.read(File.join(__dir__, '../package.json')))
 
 Pod::Spec.new do |s|
-  s.name         = "RNSslPinning"
-  s.version      = "1.0.0"
-  s.summary      = "RNSslPinning"
-  s.description  = <<-DESC
-                  RNSslPinning
-                   DESC
-  s.homepage     = ""
-  s.license      = "MIT"
+  s.name         = package['name']
+  s.version      = package['version']
+  s.summary      = package['description']
+
+  s.homepage     = package['homepage']
+  s.license      = package['license']
   # s.license      = { :type => "MIT", :file => "FILE_LICENSE" }
   s.author             = { "author" => "author@domain.cn" }
   s.platform     = :ios, "7.0"
@@ -17,7 +18,6 @@ Pod::Spec.new do |s|
 
 
   s.dependency "React"
-  #s.dependency "others"
 
 end
 

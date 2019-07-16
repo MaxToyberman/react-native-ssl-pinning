@@ -1,6 +1,6 @@
 {
   "name": "react-native-ssl-pinning",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,8 @@
   "dependencies": {
     "q": "^1.4.1"
   },
-  "license": "",
+  "license": "MIT",
+  "homepage": "https://github.com/MaxToyberman/react-native-ssl-pinning#README",
   "peerDependencies": {
     "react-native": "^0.41.2"
   },
