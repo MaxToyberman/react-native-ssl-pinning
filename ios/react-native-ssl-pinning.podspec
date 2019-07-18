@@ -11,8 +11,8 @@ Pod::Spec.new do |s|
   s.license      = package['license']
   # s.license      = { :type => "MIT", :file => "FILE_LICENSE" }
   s.author             = { "author" => "author@domain.cn" }
-  s.platform     = :ios, "7.0"
-  s.source       = { :git => "https://github.com/author/RNSslPinning.git", :tag => "master" }
+  s.platform     = :ios, "9.0"
+  s.source       = { :git => "https://github.com/MaxToyberman/react-native-ssl-pinning", :tag => "master" }
   s.source_files  = "RNSslPinning/**/*.{h,m}"
   s.requires_arc = true
 
