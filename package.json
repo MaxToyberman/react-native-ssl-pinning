@@ -1,6 +1,6 @@
 {
   "name": "react-native-ssl-pinning",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "React-Native Ssl pinning using OkHttp 3 in Android, and AFNetworking on iOS.",
   "main": "index.js",
   "scripts": {
