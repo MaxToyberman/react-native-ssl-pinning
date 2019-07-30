@@ -2,11 +2,20 @@
 # react-native-ssl-pinning
 
 React-Native Ssl pinning using OkHttp 3 in Android, and AFNetworking on iOS. 
+
+## NOTES:
+
+- for RN 0.60.0 or later use `react-native-ssl-pinning@latest`
+
+
 ## Getting started
 
 `$ npm install react-native-ssl-pinning --save`
 
+
 ### Mostly automatic installation
+
+> If you are using `React Native 0.60.+` [the link should happen automatically](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md). in iOS run pod install
 
 `$ react-native link react-native-ssl-pinning`
 
