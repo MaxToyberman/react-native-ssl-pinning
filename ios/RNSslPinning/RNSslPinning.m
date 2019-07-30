@@ -212,7 +212,10 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     if (obj[@"timeoutInterval"]) {
         [request setTimeoutInterval:[obj[@"timeoutInterval"] doubleValue] / 1000];
     }
-  
+    
+    if(obj[@"headers"]) {
+        [self setHeaders:obj request:request];
+    }
 
     if (obj) {
 
@@ -226,7 +229,7 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
                 [self performMultipartRequest:manager obj:obj url:url request:request callback:callback formData:formData];
             }
             else {
-                  [self setHeaders:obj request:request];
+                
                 // post a string
                 NSData *data = [obj[@"body"] dataUsingEncoding:NSUTF8StringEncoding];
                 [request setHTTPBody:data];
