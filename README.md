@@ -64,7 +64,7 @@ import {fetch, removeCookieByName} from 'react-native-ssl-pinning';
 
 fetch(url, {
 	method: "POST" ,
-	timeoutInterval: communication_timeout,
+	timeoutInterval: communication_timeout, // milliseconds
 	body: body,
 	// your certificates array (needed only in android) ios will pick it automatically
 	sslPinning: {
@@ -111,7 +111,7 @@ formData.append('file', {
 
 fetch(url, {
 	method: "POST" ,
-	timeoutInterval: communication_timeout,
+	timeoutInterval: communication_timeout, // milliseconds
 	body: {
 				formData: request,
 	},
