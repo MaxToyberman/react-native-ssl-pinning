@@ -31,6 +31,14 @@ React-Native Ssl pinning using OkHttp 3 in Android, and AFNetworking on iOS.
 
 #### Android
 
+Add maven { url "https://jitpack.io" } to project level build.gradle like this: 
+```
+allprojects {
+    repositories {
+	maven { url "https://jitpack.io" }
+    }
+}
+```
 1. Open up `android/app/src/main/java/[...]/MainActivity.java`
   - Add `import com.toyberman.RNSslPinningPackage;` to the imports at the top of the file
   - Add `new RNSslPinningPackage()` to the list returned by the `getPackages()` method
