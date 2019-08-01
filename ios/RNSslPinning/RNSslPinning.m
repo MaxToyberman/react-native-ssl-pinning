@@ -81,14 +81,14 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
             callback(@[[NSNull null], @{
                 @"status": @(statusCode),
                 @"headers": httpResp.allHeaderFields,
-                @"bodyString": bodyString
+                @"bodyString": bodyString ? bodyString : @""
             }]);
         } else if (error && error.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 callback(@[@{
                     @"status": @(statusCode),
                     @"headers": httpResp.allHeaderFields,
-                    @"bodyString": bodyString
+                    @"bodyString": bodyString ? bodyString : @""
                 }, [NSNull null]]);
             });
         } else {
@@ -172,7 +172,7 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
                           NSDictionary *res = @{
                                                 @"status": @(statusCode),
                                                 @"headers": httpResp.allHeaderFields,
-                                                @"bodyString": bodyString
+                                                @"bodyString": bodyString ? bodyString : @""
                                                 };
                           callback(@[[NSNull null], res]);
                           
