@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -44,13 +45,14 @@ public class OkHttpUtils {
     private static final String BODY_KEY = "body";
     private static final String METHOD_KEY = "method";
     private static final String FILE = "file";
-    private static OkHttpClient client = null;
+    private static final HashMap<String, OkHttpClient> hostClients = new HashMap<>();
+//    private static OkHttpClient client = null;
     private static SSLContext sslContext;
     private static String content_type = "application/json; charset=utf-8";
     public static MediaType mediaType = MediaType.parse(content_type);
 
     public static OkHttpClient buildOkHttpClient(CookieJar cookieJar, String hostname, ReadableArray certs, ReadableMap options) {
-        if (client == null) {
+        if (!hostClients.containsKey(hostname)) {
             // add logging interceptor
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -100,13 +102,15 @@ public class OkHttpUtils {
                 clientBuilder.addInterceptor(logging);
             }
 
-            client = clientBuilder
+            hostClients.put(
+                hostname,
+                clientBuilder
                     .cookieJar(cookieJar)
                     .sslSocketFactory(sslContext.getSocketFactory())
-                    .build();
+                    .build());
 
         }
-        return client;
+        return hostClients.get(hostname);
     }
 
     public static Request buildRequest(Context context, ReadableMap options, String hostname) throws JSONException {
