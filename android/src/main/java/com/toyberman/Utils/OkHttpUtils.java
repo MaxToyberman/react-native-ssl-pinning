@@ -45,14 +45,14 @@ public class OkHttpUtils {
     private static final String BODY_KEY = "body";
     private static final String METHOD_KEY = "method";
     private static final String FILE = "file";
-    private static final HashMap<String, OkHttpClient> hostClients = new HashMap<>();
+    private static final HashMap<String, OkHttpClient> clientsByDomain = new HashMap<>();
 //    private static OkHttpClient client = null;
     private static SSLContext sslContext;
     private static String content_type = "application/json; charset=utf-8";
     public static MediaType mediaType = MediaType.parse(content_type);
 
-    public static OkHttpClient buildOkHttpClient(CookieJar cookieJar, String hostname, ReadableArray certs, ReadableMap options) {
-        if (!hostClients.containsKey(hostname)) {
+    public static OkHttpClient buildOkHttpClient(CookieJar cookieJar, String domainName, ReadableArray certs, ReadableMap options) {
+        if (!clientsByDomain.containsKey(domainName)) {
             // add logging interceptor
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -102,15 +102,15 @@ public class OkHttpUtils {
                 clientBuilder.addInterceptor(logging);
             }
 
-            hostClients.put(
-                hostname,
-                clientBuilder
+            OkHttpClient client = clientBuilder
                     .cookieJar(cookieJar)
                     .sslSocketFactory(sslContext.getSocketFactory())
-                    .build());
+                    .build();
 
+            clientsByDomain.put(domainName, client);
+            return client;
         }
-        return hostClients.get(hostname);
+        return clientsByDomain.get(domainName);
     }
 
     public static Request buildRequest(Context context, ReadableMap options, String hostname) throws JSONException {
