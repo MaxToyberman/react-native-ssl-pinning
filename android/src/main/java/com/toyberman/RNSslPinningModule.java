@@ -203,12 +203,15 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                 public void onResponse(Call call, Response okHttpResponse) throws IOException {
                     byte[] bytes = okHttpResponse.body().bytes();
                     String stringResponse = new String(bytes, "UTF-8");
+                    String responseType = "";
 
                     //build response headers map
                     WritableMap headers = buildResponseHeaders(okHttpResponse);
                     //set response status code
                     response.putInt("status", okHttpResponse.code());
-                    String responseType = options.getString("responseType");
+                    if(options.hasKey(RESPONSE_TYPE)){
+                        responseType = options.getString(RESPONSE_TYPE);
+                    }
                     switch (responseType) {
                         case "base64":
                             String base64 = Base64.getEncoder().encodeToString(bytes);

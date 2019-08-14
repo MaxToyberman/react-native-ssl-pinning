@@ -86,7 +86,7 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
                 callback(@[[NSNull null], @{
                                 @"status": @(statusCode),
                                 @"headers": httpResp.allHeaderFields,
-                                @"base64": base64String
+                                @"data": base64String
                                 }]);
             }
             else {
