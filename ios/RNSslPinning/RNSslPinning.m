@@ -69,7 +69,7 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
 }
 
 
--(void)performRequest:(AFURLSessionManager*)manager request:(NSMutableURLRequest*) request callback:(RCTResponseSenderBlock) callback  {
+-(void)performRequest:(AFURLSessionManager*)manager  obj:(NSDictionary *)obj  request:(NSMutableURLRequest*) request callback:(RCTResponseSenderBlock) callback  {
     
     [[manager dataTaskWithRequest:request completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
         
@@ -78,11 +78,24 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
         NSInteger statusCode = httpResp.statusCode;
 
         if (!error) {
-            callback(@[[NSNull null], @{
-                @"status": @(statusCode),
-                @"headers": httpResp.allHeaderFields,
-                @"bodyString": bodyString ? bodyString : @""
-            }]);
+            // if(obj[@"responseType"]){
+            NSString * responseType = obj[@"responseType"];
+            
+            if ([responseType isEqualToString:@"base64"]){
+                NSString* base64String = [responseObject base64EncodedStringWithOptions:0];
+                callback(@[[NSNull null], @{
+                                @"status": @(statusCode),
+                                @"headers": httpResp.allHeaderFields,
+                                @"base64": base64String
+                                }]);
+            }
+            else {
+                callback(@[[NSNull null], @{
+                                @"status": @(statusCode),
+                                @"headers": httpResp.allHeaderFields,
+                                @"bodyString": bodyString ? bodyString : @""           
+                                }]);
+            }
         } else if (error && error.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 callback(@[@{
@@ -212,7 +225,7 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     if (obj[@"timeoutInterval"]) {
         [request setTimeoutInterval:[obj[@"timeoutInterval"] doubleValue] / 1000];
     }
-    
+  
     if(obj[@"headers"]) {
         [self setHeaders:obj request:request];
     }
@@ -229,17 +242,17 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
                 [self performMultipartRequest:manager obj:obj url:url request:request callback:callback formData:formData];
             }
             else {
-                
+
                 // post a string
                 NSData *data = [obj[@"body"] dataUsingEncoding:NSUTF8StringEncoding];
                 [request setHTTPBody:data];
-                [self performRequest:manager request:request callback:callback ];
+                [self performRequest:manager obj:obj request:request callback:callback ];
                 //TODO: if no body
             }
             
         }
         else {
-            [self performRequest:manager request:request callback:callback ];
+            [self performRequest:manager obj:obj request:request callback:callback ];
         }
     }
     else {

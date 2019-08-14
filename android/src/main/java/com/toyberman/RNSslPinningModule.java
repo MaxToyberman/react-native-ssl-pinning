@@ -1,7 +1,6 @@
 package com.toyberman;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -14,7 +13,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.network.ForwardingCookieHandler;
-import com.facebook.react.modules.network.ReactCookieJarContainer;
 import com.toyberman.Utils.OkHttpUtils;
 
 import org.json.JSONException;
@@ -23,6 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +41,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
 
     private static final String OPT_SSL_PINNING_KEY = "sslPinning";
+    private static final String RESPONSE_TYPE = "responseType";
 
     private final ReactApplicationContext reactContext;
     private final HashMap<String, List<Cookie>> cookieStore;
@@ -57,7 +57,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         cookieJar = new CookieJar() {
 
             @Override
-            public synchronized void saveFromResponse(HttpUrl url, List<Cookie> unmodifiableCookieList)  {
+            public synchronized void saveFromResponse(HttpUrl url, List<Cookie> unmodifiableCookieList) {
                 for (Cookie cookie : unmodifiableCookieList) {
                     setCookie(url, cookie);
                 }
@@ -201,12 +201,23 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
                 @Override
                 public void onResponse(Call call, Response okHttpResponse) throws IOException {
-                    String stringResponse = okHttpResponse.body().string();
+                    byte[] bytes = okHttpResponse.body().bytes();
+                    String stringResponse = new String(bytes, "UTF-8");
+
                     //build response headers map
                     WritableMap headers = buildResponseHeaders(okHttpResponse);
                     //set response status code
                     response.putInt("status", okHttpResponse.code());
-                    response.putString("bodyString", stringResponse);
+                    String responseType = options.getString("responseType");
+                    switch (responseType) {
+                        case "base64":
+                            String base64 = Base64.getEncoder().encodeToString(bytes);
+                            response.putString("data", base64);
+                            break;
+                        default:
+                            response.putString("bodyString", stringResponse);
+                            break;
+                    }
                     response.putMap("headers", headers);
 
                     if (okHttpResponse.isSuccessful()) {
