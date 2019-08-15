@@ -1,5 +1,6 @@
 package com.toyberman;
 
+import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.facebook.react.bridge.Arguments;
@@ -209,12 +210,17 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                     WritableMap headers = buildResponseHeaders(okHttpResponse);
                     //set response status code
                     response.putInt("status", okHttpResponse.code());
-                    if(options.hasKey(RESPONSE_TYPE)){
+                    if (options.hasKey(RESPONSE_TYPE)) {
                         responseType = options.getString(RESPONSE_TYPE);
                     }
                     switch (responseType) {
                         case "base64":
-                            String base64 = Base64.getEncoder().encodeToString(bytes);
+                            String base64;
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                                base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT);
+                            } else {
+                                base64 = Base64.getEncoder().encodeToString(bytes);
+                            }
                             response.putString("data", base64);
                             break;
                         default:
