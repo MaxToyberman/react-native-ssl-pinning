@@ -163,7 +163,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void fetch(String hostname, ReadableMap options, final Callback callback) {
+    public void fetch(String hostname, final ReadableMap options, final Callback callback) {
 
         final WritableMap response = Arguments.createMap();
         // With ssl pinning
