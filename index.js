@@ -9,6 +9,7 @@ const fetch = (url, obj, callback) => {
         if (err && typeof err != 'object') {
             deferred.reject({
                 error: 'Connection cancelled: certificate mismatch',
+                details: err,
                 url: url
             });
         } else {
