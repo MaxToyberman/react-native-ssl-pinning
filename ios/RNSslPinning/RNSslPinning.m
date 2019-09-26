@@ -8,6 +8,7 @@
 
 #import "RNSslPinning.h"
 #import "AFNetworking.h"
+#import "RCTLog.h"
 
 @interface RNSslPinning()
 
@@ -199,25 +200,28 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     NSURL *u = [NSURL URLWithString:url];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:u];
     
-    // set policy (ssl pinning)
-//    AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
-//
-//    policy.validatesDomainName = false;
-//    policy.allowInvalidCertificates = true;
-//    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-//    configuration.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-//
-//    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:configuration];
-//
-//    manager.securityPolicy = policy;
-//
-    // set policy (ssl pinning)
-    AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
-    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-    manager.securityPolicy = policy;
-
-    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    /*
+    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
+    configuration.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:configuration];
+    */
+  
+    AFURLSessionManager *manager = [[AFURLSessionManager alloc]
+                                    initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
     
+    if (obj[@"disableAllSecurity"]) {
+        // set policy: IGNORE all security checks
+        AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
+        policy.validatesDomainName = false;
+        policy.allowInvalidCertificates = true;
+        manager.securityPolicy = policy;
+    } else {
+        // set policy: SSL pinning
+        AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
+        manager.securityPolicy = policy;
+    }
+    
+    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
     
     if (obj[@"method"]) {
         [request setHTTPMethod:obj[@"method"]];
