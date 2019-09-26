@@ -12,6 +12,7 @@ export namespace ReactNativeSSLPinning {
         credentials?: string,
         headers?: Header;
         method?: 'DELETE' | 'GET' | 'POST' | 'PUT',
+        disableAllSecurity: boolean,
         sslPinning: {
             certs: string[]
         },
