@@ -74,7 +74,7 @@ fetch(url, {
 	method: "POST" ,
 	timeoutInterval: communication_timeout, // milliseconds
 	body: body,
-	// your certificates array (needed only in android) ios will pick it automatically
+  // your certificates array
 	sslPinning: {
 		certs: ["cert1","cert2"]
 	},

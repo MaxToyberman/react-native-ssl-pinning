@@ -209,7 +209,7 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     AFURLSessionManager *manager = [[AFURLSessionManager alloc]
                                     initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
     
-    if (obj[@"disableAllSecurity"]) {
+    if ([obj[@"disableAllSecurity"] intValue] == 1) {
         // set policy: IGNORE all security checks
         AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
         policy.validatesDomainName = false;
@@ -217,7 +217,19 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
         manager.securityPolicy = policy;
     } else {
         // set policy: SSL pinning
+        // load certs
+        NSArray *certsParam = obj[@"sslPinning"][@"certs"];
+        NSMutableSet *certificates = [NSMutableSet setWithCapacity:[certsParam count]];
+        for (NSString *cert in certsParam) {
+            NSString *cpath = [[NSBundle mainBundle] pathForResource:cert ofType:@"cer"];
+            NSData *cdata = [NSData dataWithContentsOfFile:cpath];
+            [certificates addObject:cdata];
+        }
+        // create policy
         AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
+        policy.pinnedCertificates = [NSSet setWithSet:certificates];
+        policy.validatesDomainName = true;
+        policy.allowInvalidCertificates = false;
         manager.securityPolicy = policy;
     }
     
