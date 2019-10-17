@@ -8,6 +8,11 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.toyberman.BuildConfig;
 
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -46,7 +51,7 @@ public class OkHttpUtils {
     private static final String METHOD_KEY = "method";
     private static final String FILE = "file";
     private static final HashMap<String, OkHttpClient> clientsByDomain = new HashMap<>();
-//    private static OkHttpClient client = null;
+    //    private static OkHttpClient client = null;
     private static SSLContext sslContext;
     private static String content_type = "application/json; charset=utf-8";
     public static MediaType mediaType = MediaType.parse(content_type);
@@ -60,29 +65,13 @@ public class OkHttpUtils {
             // SSLFactory
             try {
                 sslContext = SSLContext.getInstance("TLS");
-                CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                String keyStoreType = KeyStore.getDefaultType();
-                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-                keyStore.load(null, null);
-
-                for (int i = 0; i < certs.size(); i++) {
-                    String filename = certs.getString(i);
-                    InputStream caInput = new BufferedInputStream(OkHttpUtils.class.getClassLoader().getResourceAsStream("assets/" + filename + ".cer"));
-                    Certificate ca;
-                    try {
-                        ca = cf.generateCertificate(caInput);
-                    } finally {
-                        caInput.close();
-                    }
-
-                    keyStore.setCertificateEntry(filename, ca);
+                if (options.hasKey("disableAllSecurity") && options.getBoolean("disableAllSecurity")) {
+                    TrustManager[] tm = getUnsafeTrustManager();
+                    sslContext.init(null, tm, null);
+                } else {
+                    TrustManagerFactory tmf = getPinningTrustManagerFactory(certs);
+                    sslContext.init(null, tmf.getTrustManagers(), null);
                 }
-
-                String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
-                tmf.init(keyStore);
-
-                sslContext.init(null, tmf.getTrustManagers(), null);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -111,6 +100,55 @@ public class OkHttpUtils {
             return client;
         }
         return clientsByDomain.get(domainName);
+    }
+
+    private static TrustManager[] getUnsafeTrustManager() throws Exception {
+        final TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
+                            throws CertificateException {
+                    }
+
+                    @Override
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+                            throws CertificateException {
+                    }
+
+                    @Override
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return new java.security.cert.X509Certificate[]{};
+                    }
+                }
+        };
+        return trustAllCerts;
+    }
+
+    private static TrustManagerFactory getPinningTrustManagerFactory(ReadableArray certs)
+            throws CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException {
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        String keyStoreType = KeyStore.getDefaultType();
+        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+        keyStore.load(null, null);
+
+        for (int i = 0; i < certs.size(); i++) {
+            String filename = certs.getString(i);
+            InputStream caInput = new BufferedInputStream(
+                    OkHttpUtils.class.getClassLoader().getResourceAsStream("assets/" + filename + ".cer"));
+            Certificate ca;
+            try {
+                ca = cf.generateCertificate(caInput);
+            } finally {
+                caInput.close();
+            }
+
+            keyStore.setCertificateEntry(filename, ca);
+        }
+
+        String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+        tmf.init(keyStore);
+        return tmf;
     }
 
     public static Request buildRequest(Context context, ReadableMap options, String hostname) throws JSONException {
