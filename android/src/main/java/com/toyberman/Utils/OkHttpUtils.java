@@ -92,7 +92,7 @@ public class OkHttpUtils {
             }
 
             OkHttpClient client = clientBuilder
-                    .cookieJar(cookieJar)
+                    //.cookieJar(cookieJar)
                     .sslSocketFactory(sslContext.getSocketFactory())
                     .build();
 
