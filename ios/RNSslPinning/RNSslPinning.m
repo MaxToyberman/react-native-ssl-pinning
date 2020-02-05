@@ -242,10 +242,16 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
                 [self performMultipartRequest:manager obj:obj url:url request:request callback:callback formData:formData];
             }
             else {
-
-                // post a string
-                NSData *data = [obj[@"body"] dataUsingEncoding:NSUTF8StringEncoding];
-                [request setHTTPBody:data];
+                NSString *body = obj[@"body"];
+                NSData *bodyData = [body dataUsingEncoding:NSUTF8StringEncoding];
+                NSDictionary *bodyDic = [NSJSONSerialization JSONObjectWithData:bodyData options:NSJSONReadingMutableLeaves error:nil];
+                NSData *jsondata = [NSJSONSerialization dataWithJSONObject:bodyDic
+                                                               options:NSJSONWritingPrettyPrinted
+                                                                 error:nil];
+                [request setValue:@"application/json" forHTTPHeaderField:@"Content-type"];
+                [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)[jsondata length]] forHTTPHeaderField:@"Content-Length"];
+                [request setHTTPBody:jsondata];
+                
                 [self performRequest:manager obj:obj request:request callback:callback ];
                 //TODO: if no body
             }

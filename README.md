@@ -70,13 +70,17 @@ openssl x509 -in mycert.pem -outform der -out mycert.cer
 ```javascript
 import {fetch, removeCookieByName} from 'react-native-ssl-pinning';
 
+const body = {
+	key: value
+}
+
 fetch(url, {
 	method: "POST" ,
 	timeoutInterval: communication_timeout, // milliseconds
-	body: body,
+	body: JSON.stringify(body),
 	// your certificates array (needed only in android) ios will pick it automatically
 	sslPinning: {
-		certs: ["cert1","cert2"]
+		certs: ["cert1","cert2"] // This is certificate filenames that you added in your android project
 	},
 	headers: {
 		Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
