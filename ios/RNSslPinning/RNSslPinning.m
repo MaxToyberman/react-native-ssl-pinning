@@ -76,7 +76,7 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
         NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
         NSString *bodyString = [[NSString alloc] initWithData: responseObject encoding:NSUTF8StringEncoding];
         NSInteger statusCode = httpResp.statusCode;
-
+        
         if (!error) {
             // if(obj[@"responseType"]){
             NSString * responseType = obj[@"responseType"];
@@ -84,24 +84,24 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
             if ([responseType isEqualToString:@"base64"]){
                 NSString* base64String = [responseObject base64EncodedStringWithOptions:0];
                 callback(@[[NSNull null], @{
-                                @"status": @(statusCode),
-                                @"headers": httpResp.allHeaderFields,
-                                @"data": base64String
-                                }]);
+                               @"status": @(statusCode),
+                               @"headers": httpResp.allHeaderFields,
+                               @"data": base64String
+                }]);
             }
             else {
                 callback(@[[NSNull null], @{
-                                @"status": @(statusCode),
-                                @"headers": httpResp.allHeaderFields,
-                                @"bodyString": bodyString ? bodyString : @""           
-                                }]);
+                               @"status": @(statusCode),
+                               @"headers": httpResp.allHeaderFields,
+                               @"bodyString": bodyString ? bodyString : @""
+                }]);
             }
         } else if (error && error.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 callback(@[@{
-                    @"status": @(statusCode),
-                    @"headers": httpResp.allHeaderFields,
-                    @"bodyString": bodyString ? bodyString : @""
+                               @"status": @(statusCode),
+                               @"headers": httpResp.allHeaderFields,
+                               @"bodyString": bodyString ? bodyString : @""
                 }, [NSNull null]]);
             });
         } else {
@@ -131,66 +131,75 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
 -(void)performMultipartRequest: (AFURLSessionManager*)manager obj:(NSDictionary *)obj url:(NSString *)url request:(NSMutableURLRequest*) request callback:(RCTResponseSenderBlock) callback formData:(NSDictionary*) formData {
     
     
-    request = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:url parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> _formData) {
-                        if([formData objectForKey:@"_parts"]){
-                            NSArray * parts = formData[@"_parts"];
-                            for (int i = 0; i < [parts count]; i++)
-                            {
-                                NSArray * part = parts[i];
-                                if([part[0] isKindOfClass:[NSString class]]) {
-                                    NSString * key = part[0];
-                                    if ([key isEqualToString:@"file"])
-                                    {
-                                        NSDictionary * value = part[1];
-                                        NSString * fileName = [value objectForKey:@"fileName"];
-                                        NSString * mimeType = [value objectForKey:@"type"];
-                                        NSString * data = [value objectForKey:@"data"];
-                                        NSData *nsdataFromBase64String = [[NSData alloc] initWithBase64EncodedString:data options:0];
-
-                                        [_formData appendPartWithFileData:nsdataFromBase64String name:@"file" fileName:fileName mimeType:mimeType];
-                                        //[_formData appendPartWithFileURL:[NSURL fileURLWithPath:path] name:name fileName:fileName mimeType:mimeType error:&error1];
-                                        //NSLog(@"%@",error1);
-
-                                    }
-                                    else  {
-                                        
-                                        NSString * value = part[1];
-                                        NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
-                                        [_formData appendPartWithFormData:data name: key];
-                                    }
-                                }
-                            }
-                        }
+    NSMutableURLRequest *formDataRequest = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:url parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> _formData) {
+        if([formData objectForKey:@"_parts"]){
+            NSArray * parts = formData[@"_parts"];
+            for (int i = 0; i < [parts count]; i++)
+            {
+                NSArray * part = parts[i];
+                if([part[0] isKindOfClass:[NSString class]]) {
+                    NSString * key = part[0];
+                    if ([key isEqualToString:@"file"])
+                    {
+                        NSDictionary * value = part[1];
+                        NSString * fileName = [value objectForKey:@"fileName"];
+                        NSString * mimeType = [value objectForKey:@"type"];
+                        NSString * path = [value objectForKey:@"path"];
+                        NSError *error1;
+                        [_formData appendPartWithFileURL:[NSURL URLWithString:path] name:@"file" fileName:fileName mimeType:mimeType error:&error1];
+                        NSLog(@"Upload file error: %@",error1);
+                    }
+                    else  {
+                        NSString * value = part[1];
+                        NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
+                        [_formData appendPartWithFormData:data name: key];
+                    }
+                }
+            }
+        }
     } error:nil];
     
-
+    // Migrate header fields.
+    [formDataRequest setAllHTTPHeaderFields:[request allHTTPHeaderFields]];
     
-    NSURLSessionUploadTask *uploadTask;
-    uploadTask = [manager
-                  uploadTaskWithStreamedRequest:request
-                  progress:^(NSProgress * _Nonnull uploadProgress) {
-                      
-                  }
-                  completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
-                      if (error) {
-                          NSLog(@"Error: %@", error);
-                      } else {
-                          NSLog(@"%@ %@", response, responseObject);
-                          
-                          NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
-
-                          NSString *bodyString = [[NSString alloc] initWithData: responseObject encoding:NSUTF8StringEncoding];
-                          NSInteger statusCode = httpResp.statusCode;
-                          
-                          NSDictionary *res = @{
-                                                @"status": @(statusCode),
-                                                @"headers": httpResp.allHeaderFields,
-                                                @"bodyString": bodyString ? bodyString : @""
-                                                };
-                          callback(@[[NSNull null], res]);
-                          
-                      }
-                  }];
+    NSURLSessionUploadTask *uploadTask = [manager
+                                          uploadTaskWithStreamedRequest:formDataRequest
+                                          progress:^(NSProgress * _Nonnull uploadProgress) {
+        NSLog(@"Upload progress %lld", uploadProgress.completedUnitCount / uploadProgress.totalUnitCount);
+    }
+                                          completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
+        NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
+        NSString *bodyString = [[NSString alloc] initWithData: responseObject encoding:NSUTF8StringEncoding];
+        NSInteger statusCode = httpResp.statusCode;
+        if (!error) {
+            NSLog(@"%@ %@", response, responseObject);
+            
+            NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
+            
+            NSString *bodyString = [[NSString alloc] initWithData: responseObject encoding:NSUTF8StringEncoding];
+            NSInteger statusCode = httpResp.statusCode;
+            
+            NSDictionary *res = @{
+                @"status": @(statusCode),
+                @"headers": httpResp.allHeaderFields,
+                @"bodyString": bodyString ? bodyString : @""
+            };
+            callback(@[[NSNull null], res]);
+        }
+        else if (error && error.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                callback(@[@{
+                               @"status": @(statusCode),
+                               @"headers": httpResp.allHeaderFields,
+                               @"bodyString": bodyString ? bodyString : @""
+                }, [NSNull null]]);
+            });
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                callback(@[error.localizedDescription, [NSNull null]]);
+            });
+        }
+    }];
     
     [uploadTask resume];
 }
@@ -198,26 +207,11 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
 RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTResponseSenderBlock)callback) {
     NSURL *u = [NSURL URLWithString:url];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:u];
-    
-    // set policy (ssl pinning)
-//    AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
-//
-//    policy.validatesDomainName = false;
-//    policy.allowInvalidCertificates = true;
-//    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-//    configuration.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-//
-//    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:configuration];
-//
-//    manager.securityPolicy = policy;
-//
     // set policy (ssl pinning)
     AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
     AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
     manager.securityPolicy = policy;
-
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
-    
     
     if (obj[@"method"]) {
         [request setHTTPMethod:obj[@"method"]];
@@ -225,46 +219,39 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     if (obj[@"timeoutInterval"]) {
         [request setTimeoutInterval:[obj[@"timeoutInterval"] doubleValue] / 1000];
     }
-  
+    
     if(obj[@"headers"]) {
         [self setHeaders:obj request:request];
     }
-
+    
     if (obj) {
-
         if ([obj objectForKey:@"body"]) {
-            NSDictionary * body = obj[@"body"];
+            NSString *body = obj[@"body"];
+            NSData *bodyData = [body dataUsingEncoding:NSUTF8StringEncoding];
+            NSDictionary *bodyDic = [NSJSONSerialization JSONObjectWithData:bodyData options:NSJSONReadingMutableLeaves error:nil];
             
             // this is a multipart form data request
-            if([body isKindOfClass:[NSDictionary class]] && [body objectForKey:@"formData"]){
+            if([bodyDic objectForKey:@"formData"]){
                 // post multipart
-                NSDictionary * formData = body[@"formData"];
+                NSDictionary * formData = bodyDic[@"formData"];
                 [self performMultipartRequest:manager obj:obj url:url request:request callback:callback formData:formData];
             }
+            // Update normal request.
             else {
-                NSString *body = obj[@"body"];
-                NSData *bodyData = [body dataUsingEncoding:NSUTF8StringEncoding];
-                NSDictionary *bodyDic = [NSJSONSerialization JSONObjectWithData:bodyData options:NSJSONReadingMutableLeaves error:nil];
                 NSData *jsondata = [NSJSONSerialization dataWithJSONObject:bodyDic
-                                                               options:NSJSONWritingPrettyPrinted
-                                                                 error:nil];
+                                                                   options:NSJSONWritingPrettyPrinted
+                                                                     error:nil];
                 [request setValue:@"application/json" forHTTPHeaderField:@"Content-type"];
                 [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)[jsondata length]] forHTTPHeaderField:@"Content-Length"];
                 [request setHTTPBody:jsondata];
                 
                 [self performRequest:manager obj:obj request:request callback:callback ];
-                //TODO: if no body
             }
-            
         }
         else {
             [self performRequest:manager obj:obj request:request callback:callback ];
         }
     }
-    else {
-        
-    }
-    
 }
 
 + (BOOL)requiresMainQueueSetup
