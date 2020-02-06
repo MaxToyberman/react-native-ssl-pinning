@@ -42,6 +42,7 @@ public class OkHttpUtils {
 
     private static final String HEADERS_KEY = "headers";
     private static final String BODY_KEY = "body";
+    private static final String ANDROID_BODY_KEY = "android_body";
     private static final String METHOD_KEY = "method";
     private static final String FILE = "file";
     private static final HashMap<String, OkHttpClient> clientsByDomain = new HashMap<>();
@@ -142,61 +143,50 @@ public class OkHttpUtils {
             method = options.getString(METHOD_KEY);
         }
 
-        if (options.hasKey(BODY_KEY)) {
+        if (options.hasKey(ANDROID_BODY_KEY)) {
+            ReadableMap bodyMap = options.getMap(ANDROID_BODY_KEY);
+            if (bodyMap.hasKey("formData")) {
+                ReadableMap formData = bodyMap.getMap("formData");
 
-            ReadableType bodyType = options.getType(BODY_KEY);
-            switch (bodyType) {
-                case String:
-                    body = RequestBody.create(mediaType, options.getString(BODY_KEY));
-                    break;
-                case Map:
-                    ReadableMap bodyMap = options.getMap(BODY_KEY);
-                    if (bodyMap.hasKey("formData")) {
-                        ReadableMap formData = bodyMap.getMap("formData");
-
-                        if (formData.hasKey("_parts")) {
-                            ReadableArray parts = formData.getArray("_parts");
-                            for (int i = 0; i < parts.size(); i++) {
-                                ReadableArray part = parts.getArray(i);
+                if (formData.hasKey("_parts")) {
+                    ReadableArray parts = formData.getArray("_parts");
+                    for (int i = 0; i < parts.size(); i++) {
+                        ReadableArray part = parts.getArray(i);
 
 
-                                if (part.getType(0) == ReadableType.String) {
-                                    String key = part.getString(0);
+                        if (part.getType(0) == ReadableType.String) {
+                            String key = part.getString(0);
 
-                                    if (key.equals("file")) {
+                            if (key.equals("file")) {
 
-                                        ReadableMap fileData = part.getMap(1);
+                                ReadableMap fileData = part.getMap(1);
 
-                                        Uri _uri = Uri.parse(fileData.getString("uri"));
+                                Uri _uri = Uri.parse(fileData.getString("uri"));
 
-                                        String type = fileData.getString("type");
+                                String type = fileData.getString("type");
 
-                                        String fileName = fileData.getString("fileName");
-                                        File file = null;
-                                        try {
-                                            file = getTempFile(context, _uri);
-                                            multipartBodyBuilder.addFormDataPart(key, fileName, RequestBody.create(MediaType.parse(type), file));
+                                String fileName = fileData.getString("fileName");
+                                File file = null;
+                                try {
+                                    file = getTempFile(context, _uri);
+                                    multipartBodyBuilder.addFormDataPart(key, fileName, RequestBody.create(MediaType.parse(type), file));
 
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-
-                                    } else {
-                                        String value = part.getString(1);
-                                        multipartBodyBuilder.addFormDataPart(key, value);
-                                    }
-
+                                } catch (IOException e) {
+                                    e.printStackTrace();
                                 }
 
-
                             }
-                            body = multipartBodyBuilder.build();
                         }
                     }
-
-                    break;
+                    body = multipartBodyBuilder.build();
+                }
             }
-
+        }
+        if (options.hasKey(BODY_KEY) && body == null) {
+            ReadableType bodyType = options.getType(BODY_KEY);
+            if (bodyType == ReadableType.String) {
+                body = RequestBody.create(mediaType, options.getString(BODY_KEY));
+            }
         }
         return requestBuilder
                 .url(hostname)

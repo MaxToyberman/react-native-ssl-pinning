@@ -78,6 +78,7 @@ fetch(url, {
 	method: "POST" ,
 	timeoutInterval: communication_timeout, // milliseconds
 	body: JSON.stringify(body),
+	android_body: body,
 	// your certificates array (needed only in android) ios will pick it automatically
 	sslPinning: {
 		certs: ["cert1","cert2"] // This is certificate filenames that you added in your android project
