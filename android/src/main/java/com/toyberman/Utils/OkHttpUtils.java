@@ -66,12 +66,12 @@ public class OkHttpUtils {
             if (options.hasKey("pkPinning") && options.getBoolean("pkPinning") == true) {
                 // public key pinning
                 certificatePinner = initPublicKeyPinning(certs, domainName);
-                clientBuilder.certificatePinner(certificatePinner)
+                clientBuilder.certificatePinner(certificatePinner);
             } else {
                 // ssl pinning
                 initSSLPinning(certs);
                 clientBuilder
-                        .sslSocketFactory(sslContext.getSocketFactory())
+                        .sslSocketFactory(sslContext.getSocketFactory());
             }
 
 
@@ -116,7 +116,7 @@ public class OkHttpUtils {
 
         CertificatePinner certificatePinner = certificatePinnerBuilder.build();
 
-        return certificatePinner
+        return certificatePinner;
 
     }
 
