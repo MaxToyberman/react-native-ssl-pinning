@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
+import okhttp3.CertificatePinner;
 import okhttp3.CookieJar;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -53,24 +54,34 @@ public class OkHttpUtils {
     public static OkHttpClient buildOkHttpClient(CookieJar cookieJar, String domainName, ReadableArray certs, ReadableMap options) {
 
         OkHttpClient client = null;
+        CertificatePinner certificatePinner = null;
         if (!clientsByDomain.containsKey(domainName)) {
             // add logging interceptor
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            // SSLFactory
-            initSSL(certs);
-
             OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+            clientBuilder.cookieJar(cookieJar);
+
+            if (options.hasKey("pkPinning") && options.getBoolean("pkPinning") == true) {
+                // public key pinning
+                certificatePinner = initPublicKeyPinning(certs, domainName);
+                clientBuilder.certificatePinner(certificatePinner)
+            } else {
+                // ssl pinning
+                initSSLPinning(certs);
+                clientBuilder
+                        .sslSocketFactory(sslContext.getSocketFactory())
+            }
+
 
             if (BuildConfig.DEBUG) {
                 clientBuilder.addInterceptor(logging);
             }
 
             client = clientBuilder
-                    .cookieJar(cookieJar)
-                    .sslSocketFactory(sslContext.getSocketFactory())
                     .build();
+
 
             clientsByDomain.put(domainName, client);
             return client;
@@ -94,7 +105,22 @@ public class OkHttpUtils {
 
     }
 
-    private static void initSSL(ReadableArray certs) {
+    private static CertificatePinner initPublicKeyPinning(initSSLPinning pins, String domain) {
+
+
+        CertificatePinner.Builder certificatePinnerBuilder = new CertificatePinner.Builder();
+        //add all keys to the certficates pinner
+        for (int i = 0; i < certs.size(); i++) {
+            certificatePinnerBuilder.add(domain, certs.getString(i));
+        }
+
+        CertificatePinner certificatePinner = certificatePinnerBuilder.build();
+
+        return certificatePinner
+
+    }
+
+    private static void initSSLPinning(ReadableArray certs) {
         try {
             sslContext = SSLContext.getInstance("TLS");
             CertificateFactory cf = CertificateFactory.getInstance("X.509");

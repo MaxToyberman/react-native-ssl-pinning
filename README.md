@@ -74,9 +74,10 @@ fetch(url, {
 	method: "POST" ,
 	timeoutInterval: communication_timeout, // milliseconds
 	body: body,
+	pkPinning: true, // if you want to use public key pinning
 	// your certificates array (needed only in android) ios will pick it automatically
 	sslPinning: {
-		certs: ["cert1","cert2"]
+		certs: ["cert1","cert2"] // if you use public key pinning, certs should look like ["sha256/....","sha256/..."]
 	},
 	headers: {
 		Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
