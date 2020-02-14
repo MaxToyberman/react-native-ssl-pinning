@@ -105,13 +105,13 @@ public class OkHttpUtils {
 
     }
 
-    private static CertificatePinner initPublicKeyPinning(initSSLPinning pins, String domain) {
+    private static CertificatePinner initPublicKeyPinning(ReadableArray pins, String domain) {
 
 
         CertificatePinner.Builder certificatePinnerBuilder = new CertificatePinner.Builder();
         //add all keys to the certficates pinner
-        for (int i = 0; i < certs.size(); i++) {
-            certificatePinnerBuilder.add(domain, certs.getString(i));
+        for (int i = 0; i < pins.size(); i++) {
+            certificatePinnerBuilder.add(domain, pins.getString(i));
         }
 
         CertificatePinner certificatePinner = certificatePinnerBuilder.build();
