@@ -199,20 +199,16 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     NSURL *u = [NSURL URLWithString:url];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:u];
     
+    AFSecurityPolicy *policy;
+    BOOL pkPinning = [[obj objectForKey:@"pkPinning"] boolValue];
     // set policy (ssl pinning)
-//    AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
-//
-//    policy.validatesDomainName = false;
-//    policy.allowInvalidCertificates = true;
-//    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-//    configuration.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-//
-//    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:configuration];
-//
-//    manager.securityPolicy = policy;
-//
-    // set policy (ssl pinning)
-    AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
+    if (pkPinning){
+        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
+    }
+    else{
+        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
+    }
+    
     AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
     manager.securityPolicy = policy;
 
