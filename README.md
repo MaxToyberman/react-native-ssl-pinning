@@ -83,18 +83,18 @@ openssl x509 -in mycert.pem -outform der -out mycert.cer
 		}
 		})
 		```
-		- Now look at your logcat ,   As expected, this fails with a certificate pinning exception: <pre>   javax.net.ssl.SSLPeerUnverifiedException: Certificate pinning failure!
-    Peer certificate chain:
-      sha256/afwiKY3RxoMmLkuRW1l7QsPZTJPwDS2pdDROQjXw8ig=: CN=publicobject.com, OU=PositiveSSL
-      sha256/klO23nT2ehFDXCfx3eHTDRESMz3asj1muO+4aIdjiuY=: CN=COMODO RSA Secure Server CA
-      sha256/grX4Ta9HpZx6tSHkmCrvpApTQGo67CYDnvprLg5yRME=: CN=COMODO RSA Certification Authority
-      sha256/lCppFqbkrlJ3EcVFAkeip0+44VaoJUymbnOaEUk7tEU=: CN=AddTrust External CA Root
-    Pinned certificates for publicobject.com:
-      sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
-    at okhttp3.CertificatePinner.check(CertificatePinner.java)
-    at okhttp3.Connection.upgradeToTls(Connection.java)
-    at okhttp3.Connection.connect(Connection.java)
-    at okhttp3.Connection.connectAndSetOwner(Connection.java)
+		- Now look at your logcat ,   As expected, this fails with a certificate pinning exception: <pre>javax.net.ssl.SSLPeerUnverifiedException: Certificate pinning failure!
+		Peer certificate chain:
+		sha256/afwiKY3RxoMmLkuRW1l7QsPZTJPwDS2pdDROQjXw8ig=: CN=publicobject.com, OU=PositiveSSL
+		sha256/klO23nT2ehFDXCfx3eHTDRESMz3asj1muO+4aIdjiuY=: CN=COMODO RSA Secure Server CA
+		sha256/grX4Ta9HpZx6tSHkmCrvpApTQGo67CYDnvprLg5yRME=: CN=COMODO RSA Certification Authority
+		sha256/lCppFqbkrlJ3EcVFAkeip0+44VaoJUymbnOaEUk7tEU=: CN=AddTrust External CA Root
+		Pinned certificates for publicobject.com:
+		sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+		at okhttp3.CertificatePinner.check(CertificatePinner.java)
+		at okhttp3.Connection.upgradeToTls(Connection.java)
+		at okhttp3.Connection.connect(Connection.java)
+		at okhttp3.Connection.connectAndSetOwner(Connection.java)
 		- Follow up by pasting the public key hashes from the exception into the certificate pinner's configuration
  
 ```javascript
