@@ -75,12 +75,11 @@ openssl x509 -in mycert.pem -outform der -out mycert.cer
 	- Turn on pinning with a broken configuration and read the expected configuration when the connection fails.
 		```javascript
 		fetch("https://publicobject.com", {
-		method: "GET" ,
-		pkPinning: true,
-		sslPinning: {
-			certs: ["sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-		] 
-		}
+			method: "GET" ,
+			pkPinning: true,
+			sslPinning: {
+				certs: ["sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="] 
+			}
 		})
 		```
 		- Now look at your logcat ,   As expected, this fails with a certificate pinning exception: <pre>javax.net.ssl.SSLPeerUnverifiedException: Certificate pinning failure!
