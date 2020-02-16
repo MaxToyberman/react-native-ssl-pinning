@@ -1,7 +1,7 @@
 
 # react-native-ssl-pinning
 
-React-Native Ssl pinning using OkHttp 3 in Android, and AFNetworking on iOS. 
+React-Native ssl pinning & public key pinning using OkHttp 3 in Android, and AFNetworking on iOS. 
 
 ## NOTES:
 
@@ -64,9 +64,39 @@ openssl x509 -in mycert.pem -outform der -out mycert.cer
 
 #### iOS
  - drag mycert.cer to Xcode project, mark your target and 'Copy items if needed'
+ - (skip this if you are using certificate pinning) no extra step needed for public key pinning,  AFNetworking will extract the public key from the certificate. 
 
 #### Android
- -  Place your .cer files under src/main/assets/.
+ -  Only if using certificate pinning : place your .cer files under src/main/assets/
+
+ - For public key pinning the public key should be extracted by the following options
+: (replace google with your domain)
+	- ```openssl s_client -servername google.com -connect google.com:443 | openssl x509 -pubkey -noout | openssl rsa -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64```
+	- Turn on pinning with a broken configuration and read the expected configuration when the connection fails.
+		```javascript
+		fetch("https://publicobject.com", {
+		method: "GET" ,
+		pkPinning: true,
+		sslPinning: {
+			certs: ["sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+		] 
+		}
+		})
+		```
+		- Now look at your logcat ,   As expected, this fails with a certificate pinning exception: <pre>   javax.net.ssl.SSLPeerUnverifiedException: Certificate pinning failure!
+    Peer certificate chain:
+      sha256/afwiKY3RxoMmLkuRW1l7QsPZTJPwDS2pdDROQjXw8ig=: CN=publicobject.com, OU=PositiveSSL
+      sha256/klO23nT2ehFDXCfx3eHTDRESMz3asj1muO+4aIdjiuY=: CN=COMODO RSA Secure Server CA
+      sha256/grX4Ta9HpZx6tSHkmCrvpApTQGo67CYDnvprLg5yRME=: CN=COMODO RSA Certification Authority
+      sha256/lCppFqbkrlJ3EcVFAkeip0+44VaoJUymbnOaEUk7tEU=: CN=AddTrust External CA Root
+    Pinned certificates for publicobject.com:
+      sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    at okhttp3.CertificatePinner.check(CertificatePinner.java)
+    at okhttp3.Connection.upgradeToTls(Connection.java)
+    at okhttp3.Connection.connect(Connection.java)
+    at okhttp3.Connection.connectAndSetOwner(Connection.java)
+		- Follow up by pasting the public key hashes from the exception into the certificate pinner's configuration
+ 
 ```javascript
 import {fetch, removeCookieByName} from 'react-native-ssl-pinning';
 
@@ -82,7 +112,8 @@ fetch(url, {
 	headers: {
 		Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
 	}
-}).then(response => {
+})
+.then(response => {
 	console.log(`response received ${response}`)
 })
 .catch(err => {
@@ -90,14 +121,14 @@ fetch(url, {
 })
 
 removeCookieByName('cookieName')
-	.then(res =>{
-		    console.log('removeCookieByName');
-	})
+.then(res =>{
+	console.log('removeCookieByName');
+})
 
 getCookies('domain')
-	.then(cookies => {
+.then(cookies => {
 		// do what you need with your cookies
-	})
+})
 
 ```
   ## Multipart request (FormData)
@@ -128,9 +159,9 @@ fetch(url, {
 		certs: ["cert1","cert2"]
 	},
 	headers: {
-				'content-type': 'multipart/form-data; charset=UTF-8',
-				accept: 'application/json, text/plain, /',
-		}
+		'content-type': 'multipart/form-data; charset=UTF-8',
+		accept: 'application/json, text/plain, /',
+	}
 })
 
 ```
