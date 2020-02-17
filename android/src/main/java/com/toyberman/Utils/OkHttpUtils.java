@@ -63,7 +63,7 @@ public class OkHttpUtils {
             OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
             clientBuilder.cookieJar(cookieJar);
 
-            if (options.hasKey("pkPinning") && options.getBoolean("pkPinning") == true) {
+            if (options.hasKey("pkPinning") && options.getBoolean("pkPinning")) {
                 // public key pinning
                 certificatePinner = initPublicKeyPinning(certs, domainName);
                 clientBuilder.certificatePinner(certificatePinner);

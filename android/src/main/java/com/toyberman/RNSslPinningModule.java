@@ -1,7 +1,8 @@
 package com.toyberman;
 
 import android.os.Build;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -43,7 +44,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
     private static final String OPT_SSL_PINNING_KEY = "sslPinning";
     private static final String RESPONSE_TYPE = "responseType";
-    private static final String  KEY_NOT_ADDED_ERROR= "sslPinning key was not added";
+    private static final String KEY_NOT_ADDED_ERROR = "sslPinning key was not added";
 
     private final ReactApplicationContext reactContext;
     private final HashMap<String, List<Cookie>> cookieStore;
@@ -169,7 +170,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         final WritableMap response = Arguments.createMap();
         // With ssl pinning
         if (options.hasKey(OPT_SSL_PINNING_KEY)) {
-            if (options.getMap(OPT_SSL_PINNING_KEY).hasKey("certs") ) {
+            if (options.getMap(OPT_SSL_PINNING_KEY).hasKey("certs")) {
                 ReadableArray certs = options.getMap(OPT_SSL_PINNING_KEY).getArray("certs");
                 if (certs.size() == 0) {
                     throw new RuntimeException("certs array is empty");
