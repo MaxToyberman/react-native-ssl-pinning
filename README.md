@@ -133,7 +133,7 @@ fetch("https://publicobject.com", {
         certs: ["sha256//r8udi/Mxd6pLO7y7hZyUMWq8YnFnIWXCqeHsTDRqy8=",
         "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=",
         "sha256/Vjs8r4z+80wjNcr1YKepWQboSIRi63WsWXhIMN+eWys="
-      ] // if you use public key pinning, certs should look like ["sha256/....","sha256/..."]
+      ]
       },
       headers: {
         Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
@@ -154,7 +154,7 @@ removeCookieByName('cookieName')
 
 getCookies('domain')
 .then(cookies => {
-		// do what you need with your cookies
+// do what you need with your cookies
 })
 
 ```
