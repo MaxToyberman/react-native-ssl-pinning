@@ -96,17 +96,18 @@ openssl x509 -in mycert.pem -outform der -out mycert.cer
 		at okhttp3.Connection.connectAndSetOwner(Connection.java)
 		- Follow up by pasting the public key hashes from the exception into the certificate pinner's configuration
  
+ ### Certificate Pinning
+
 ```javascript
-import {fetch, removeCookieByName} from 'react-native-ssl-pinning';
+import {fetch} from 'react-native-ssl-pinning';
 
 fetch(url, {
 	method: "POST" ,
 	timeoutInterval: communication_timeout, // milliseconds
 	body: body,
-	pkPinning: true, // if you want to use public key pinning
 	// your certificates array (needed only in android) ios will pick it automatically
 	sslPinning: {
-		certs: ["cert1","cert2"] // if you use public key pinning, certs should look like ["sha256/....","sha256/..."]
+		certs: ["cert1","cert2"] // your certificates name (without extension), for example cert1.cer, cert2.cer
 	},
 	headers: {
 		Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
@@ -118,6 +119,33 @@ fetch(url, {
 .catch(err => {
 	console.log(`error: ${err}`)
 })
+```
+ ### Public Key Pinning
+```javascript
+import {fetch} from 'react-native-ssl-pinning';
+
+fetch("https://publicobject.com", {
+      method: "GET" ,
+      timeoutInterval: 10000, // milliseconds
+      // your certificates array (needed only in android) ios will pick it automatically
+      pkPinning: true,
+      sslPinning: {
+        certs: ["sha256//r8udi/Mxd6pLO7y7hZyUMWq8YnFnIWXCqeHsTDRqy8=",
+        "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=",
+        "sha256/Vjs8r4z+80wjNcr1YKepWQboSIRi63WsWXhIMN+eWys="
+      ] // if you use public key pinning, certs should look like ["sha256/....","sha256/..."]
+      },
+      headers: {
+        Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
+      }
+    })
+```
+
+ ### Cookies Handling
+
+```javascript
+import {removeCookieByName} from 'react-native-ssl-pinning';
+
 
 removeCookieByName('cookieName')
 .then(res =>{
