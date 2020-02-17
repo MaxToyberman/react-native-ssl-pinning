@@ -1,7 +1,8 @@
 package com.toyberman;
 
 import android.os.Build;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -43,6 +44,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
     private static final String OPT_SSL_PINNING_KEY = "sslPinning";
     private static final String RESPONSE_TYPE = "responseType";
+    private static final String KEY_NOT_ADDED_ERROR = "sslPinning key was not added";
 
     private final ReactApplicationContext reactContext;
     private final HashMap<String, List<Cookie>> cookieStore;
@@ -187,7 +189,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
             }
         } else {
             //no ssl pinning
-            callback.invoke(new Throwable("sslPinning key was not added"), null);
+            callback.invoke(new Throwable(KEY_NOT_ADDED_ERROR), null);
             return;
         }
 
