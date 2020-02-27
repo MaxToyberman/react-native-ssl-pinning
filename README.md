@@ -56,12 +56,16 @@ allprojects {
 ## Usage
 
 #### Create the certificates:
-1. openssl s_client -showcerts -connect google.com:443 (replace google with your domain)
+
+1. openssl s_client -showcerts -servername google.com 1.-connect google.com:443 </dev/null
 
 2. Copy the certificate (Usally the first one in the chain), and paste it using nano or other editor like so , nano mycert.pem
 3. convert it to .cer with this command
 openssl x509 -in mycert.pem -outform der -out mycert.cer 
-
+```
+For more ways to obtain the server certificate please refer:
+https://stackoverflow.com/questions/7885785/using-openssl-to-get-the-certificate-from-a-server
+```
 #### iOS
  - drag mycert.cer to Xcode project, mark your target and 'Copy items if needed'
  - (skip this if you are using certificate pinning) no extra step needed for public key pinning,  AFNetworking will extract the public key from the certificate. 
