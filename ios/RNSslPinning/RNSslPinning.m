@@ -209,7 +209,9 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:u];
     // set policy (ssl pinning)
     AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
-    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+    // A session configuration that uses no persistent storage for caches, cookies, or credentials.
+    // https://developer.apple.com/documentation/foundation/nsurlsessionconfiguration/1410529-ephemeralsessionconfiguration?language=objc
+    AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration ephemeralSessionConfiguration]];
     manager.securityPolicy = policy;
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
     
