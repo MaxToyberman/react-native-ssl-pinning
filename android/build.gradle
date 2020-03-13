@@ -2,6 +2,8 @@
 buildscript {
     repositories {
         jcenter()
+
+        maven { url "https://jitpack.io" }
     }
 
     dependencies {
@@ -11,13 +13,18 @@ buildscript {
 
 apply plugin: 'com.android.library'
 
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+
+    compileSdkVersion safeExtGet("compileSdkVersion", 28)
+    buildToolsVersion safeExtGet("buildToolsVersion", "28.0.3")
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 22
+        minSdkVersion safeExtGet("minSdkVersion", 21)
+        targetSdkVersion safeExtGet("targetSdkVersion", 28)
         versionCode 1
         versionName "1.0"
     }
@@ -31,9 +38,9 @@ repositories {
 }
 
 dependencies {
-    compile 'com.facebook.react:react-native:+'
-    compile 'com.squareup.okhttp3:okhttp:3.9.1'
-    compile 'com.squareup.okio:okio:1.13.0'
+    compile "com.facebook.react:react-native:${safeExtGet("reactNative", "+")}" // from node_modules
+    compile 'com.squareup.okhttp3:okhttp:3.12.1'
+    compile 'com.squareup.okio:okio:1.15.0'
     compile 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
     compile 'com.squareup.okhttp3:logging-interceptor:3.9.1'
 }
