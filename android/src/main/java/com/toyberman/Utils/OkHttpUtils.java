@@ -151,11 +151,66 @@ public class OkHttpUtils {
         }
     }
 
+    private static boolean isFilePart(ReadableArray part) {
+        if (part.getType(1) != ReadableType.Map) {
+            return false;
+        }
+        ReadableMap value = part.getMap(1);
+        return value.hasKey("type") && (value.hasKey("uri") || value.hasKey("path"));
+    }
+
+    private static void addFormDataPart(Context context, MultipartBody.Builder multipartBodyBuilder, ReadableMap fileData, String key) {
+        Uri _uri = Uri.parse("");
+        if (fileData.hasKey("uri")) {
+            _uri = Uri.parse(fileData.getString("uri"));
+        } else if (fileData.hasKey("path")) {
+            _uri = Uri.parse(fileData.getString("path"));
+        }
+        String type = fileData.getString("type");
+        String fileName = "";
+        if (fileData.hasKey("fileName")) {
+            fileName = fileData.getString("fileName");
+        } else if (fileData.hasKey("name")) {
+            fileName = fileData.getString("name");
+        }
+
+        try {
+            File file = getTempFile(context, _uri);
+            multipartBodyBuilder.addFormDataPart(key, fileName, RequestBody.create(MediaType.parse(type), file));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static RequestBody buildFormDataRequestBody(Context context, ReadableMap formData) {
+        MultipartBody.Builder multipartBodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+        multipartBodyBuilder.setType((MediaType.parse("multipart/form-data")));
+        if (formData.hasKey("_parts")) {
+            ReadableArray parts = formData.getArray("_parts");
+            for (int i = 0; i < parts.size(); i++) {
+                ReadableArray part = parts.getArray(i);
+                String key = "";
+                if (part.getType(0) == ReadableType.String) {
+                    key = part.getString(0);
+                } else if (part.getType(0) == ReadableType.Number) {
+                    key = String.valueOf(part.getInt(0));
+                }
+
+                if (isFilePart(part)) {
+                    ReadableMap fileData = part.getMap(1);
+                    addFormDataPart(context, multipartBodyBuilder, fileData, key);
+                } else {
+                    String value = part.getString(1);
+                    multipartBodyBuilder.addFormDataPart(key, value);
+                }
+            }
+        }
+        return multipartBodyBuilder.build();
+    }
+
     public static Request buildRequest(Context context, ReadableMap options, String hostname) throws JSONException {
 
         Request.Builder requestBuilder = new Request.Builder();
-        MultipartBody.Builder multipartBodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        multipartBodyBuilder.setType((MediaType.parse("multipart/form-data")));
         RequestBody body = null;
 
         String method = "GET";
@@ -179,47 +234,10 @@ public class OkHttpUtils {
                     ReadableMap bodyMap = options.getMap(BODY_KEY);
                     if (bodyMap.hasKey("formData")) {
                         ReadableMap formData = bodyMap.getMap("formData");
-
-                        if (formData.hasKey("_parts")) {
-                            ReadableArray parts = formData.getArray("_parts");
-                            for (int i = 0; i < parts.size(); i++) {
-                                ReadableArray part = parts.getArray(i);
-
-
-                                if (part.getType(0) == ReadableType.String) {
-                                    String key = part.getString(0);
-
-                                    if (key.equals("file")) {
-
-                                        ReadableMap fileData = part.getMap(1);
-
-                                        Uri _uri = Uri.parse(fileData.getString("uri"));
-
-                                        String type = fileData.getString("type");
-
-                                        String fileName = fileData.getString("fileName");
-                                        File file = null;
-                                        try {
-                                            file = getTempFile(context, _uri);
-                                            multipartBodyBuilder.addFormDataPart(key, fileName, RequestBody.create(MediaType.parse(type), file));
-
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-
-                                    } else {
-                                        String value = part.getString(1);
-                                        multipartBodyBuilder.addFormDataPart(key, value);
-                                    }
-
-                                }
-
-
-                            }
-                            body = multipartBodyBuilder.build();
-                        }
+                        body = buildFormDataRequestBody(context, formData);
+                    } else if (bodyMap.hasKey("_parts")) {
+                        body = buildFormDataRequestBody(context, bodyMap);
                     }
-
                     break;
             }
 
