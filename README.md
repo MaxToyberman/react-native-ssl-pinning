@@ -57,7 +57,7 @@ allprojects {
 
 #### Create the certificates:
 
-1. openssl s_client -showcerts -servername google.com 1.-connect google.com:443 </dev/null
+1. openssl s_client -showcerts -servername google.com -connect google.com:443 </dev/null
 
 2. Copy the certificate (Usally the first one in the chain), and paste it using nano or other editor like so , nano mycert.pem
 3. convert it to .cer with this command
