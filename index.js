@@ -5,6 +5,12 @@ const { RNSslPinning } = NativeModules;
 
 const fetch = (url, obj, callback) => {
     let deferred = Q.defer();
+
+    if(obj.headers){
+        obj.headers = Object.keys(obj.headers)
+              .reduce((acc, key) => ({ ...acc,[key.toLowerCase()] : obj.headers[key]}), {})
+    }
+
     RNSslPinning.fetch(url, obj, (err, res) => {
         if (err && typeof err != 'object') {
             deferred.reject(err);
