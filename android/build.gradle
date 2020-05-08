@@ -31,10 +31,10 @@ repositories {
 }
 
 dependencies {
-    compile 'com.facebook.react:react-native:+'
-    compile 'com.squareup.okhttp3:okhttp:3.9.1'
-    compile 'com.squareup.okio:okio:1.13.0'
-    compile 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.9.1'
+    implementation "com.facebook.react:react-native:+"
+    implementation "com.squareup.okhttp3:okhttp:3.9.1"
+    implementation "com.squareup.okio:okio:1.13.0"
+    implementation "com.github.franmontiel:PersistentCookieJar:v1.0.1"
+    implementation "com.squareup.okhttp3:logging-interceptor:3.9.1"
 }
   
