@@ -176,8 +176,11 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         } catch (URISyntaxException e) {
             domainName = hostname;
         }
+        if (options.hasKey(DISABLE_ALL_SECURITY) && options.getBoolean(DISABLE_ALL_SECURITY)) {
+            client = OkHttpUtils.buildDefaultOHttpClient(cookieJar, domainName, options);
+        }
         // With ssl pinning
-        if (options.hasKey(OPT_SSL_PINNING_KEY)) {
+        else if (options.hasKey(OPT_SSL_PINNING_KEY)) {
             if (options.getMap(OPT_SSL_PINNING_KEY).hasKey("certs")) {
                 ReadableArray certs = options.getMap(OPT_SSL_PINNING_KEY).getArray("certs");
                 if (certs != null && certs.size() == 0) {
@@ -187,8 +190,6 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
             } else {
                 callback.invoke(new Throwable("key certs was not found"), null);
             }
-        } else if (options.hasKey(DISABLE_ALL_SECURITY)) {
-            client = OkHttpUtils.buildDefaultOHttpClient(cookieJar, domainName, options);
         } else {
             //no ssl pinning
             callback.invoke(new Throwable(KEY_NOT_ADDED_ERROR), null);
