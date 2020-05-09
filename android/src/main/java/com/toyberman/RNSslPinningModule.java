@@ -22,6 +22,7 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -43,6 +44,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
 
     private static final String OPT_SSL_PINNING_KEY = "sslPinning";
+    private static final String DISABLE_ALL_SECURITY = "disableAllSecurity";
     private static final String RESPONSE_TYPE = "responseType";
     private static final String KEY_NOT_ADDED_ERROR = "sslPinning key was not added";
 
@@ -168,25 +170,25 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
     public void fetch(String hostname, final ReadableMap options, final Callback callback) {
 
         final WritableMap response = Arguments.createMap();
+        String domainName;
+        try {
+            domainName = getDomainName(hostname);
+        } catch (URISyntaxException e) {
+            domainName = hostname;
+        }
         // With ssl pinning
         if (options.hasKey(OPT_SSL_PINNING_KEY)) {
             if (options.getMap(OPT_SSL_PINNING_KEY).hasKey("certs")) {
                 ReadableArray certs = options.getMap(OPT_SSL_PINNING_KEY).getArray("certs");
-                if (certs.size() == 0) {
+                if (certs != null && certs.size() == 0) {
                     throw new RuntimeException("certs array is empty");
                 }
-                if (certs != null) {
-                    String domainName;
-                    try {
-                        domainName = getDomainName(hostname);
-                    } catch (URISyntaxException e) {
-                        domainName = hostname;
-                    }
-                    client = OkHttpUtils.buildOkHttpClient(cookieJar, domainName, certs, options);
-                }
+                client = OkHttpUtils.buildOkHttpClient(cookieJar, domainName, certs, options);
             } else {
                 callback.invoke(new Throwable("key certs was not found"), null);
             }
+        } else if (options.hasKey(DISABLE_ALL_SECURITY)) {
+            client = OkHttpUtils.buildDefaultOHttpClient(cookieJar, domainName, options);
         } else {
             //no ssl pinning
             callback.invoke(new Throwable(KEY_NOT_ADDED_ERROR), null);
@@ -205,7 +207,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                 @Override
                 public void onResponse(Call call, Response okHttpResponse) throws IOException {
                     byte[] bytes = okHttpResponse.body().bytes();
-                    String stringResponse = new String(bytes, "UTF-8");
+                    String stringResponse = new String(bytes, StandardCharsets.UTF_8);
                     String responseType = "";
 
                     //build response headers map
