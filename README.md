@@ -142,9 +142,23 @@ fetch("https://publicobject.com", {
       headers: {
         Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
       }
-    })
+	})
+	
 ```
+### Disable Pinning
+```javascript
 
+ fetch("https://publicobject.com", {
+      method: "GET" ,
+      timeoutInterval: 10000, // milliseconds
+      disableAllSecurity: true,
+      headers: {
+        Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
+      }
+	})
+
+
+```
  ### Cookies Handling
 
 ```javascript
