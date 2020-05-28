@@ -20,11 +20,14 @@ import java.io.OutputStream;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 import okhttp3.CertificatePinner;
 import okhttp3.CookieJar;
@@ -70,9 +73,9 @@ public class OkHttpUtils {
                 clientBuilder.certificatePinner(certificatePinner);
             } else {
                 // ssl pinning
-                initSSLPinning(certs);
+                X509TrustManager manager = initSSLPinning(certs);
                 clientBuilder
-                        .sslSocketFactory(sslContext.getSocketFactory());
+                        .sslSocketFactory(sslContext.getSocketFactory(), manager);
             }
 
 
@@ -154,9 +157,10 @@ public class OkHttpUtils {
 
     }
 
-    private static void initSSLPinning(ReadableArray certs) {
+    private static X509TrustManager initSSLPinning(ReadableArray certs) {
+        X509TrustManager trustManager = null;
         try {
-            sslContext = SSLContext.getInstance("TLS");
+            sslContext = SSLContext.getInstance("SSL");
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             String keyStoreType = KeyStore.getDefaultType();
             KeyStore keyStore = KeyStore.getInstance(keyStoreType);
@@ -179,10 +183,19 @@ public class OkHttpUtils {
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
             tmf.init(keyStore);
 
-            sslContext.init(null, tmf.getTrustManagers(), null);
+            TrustManager[] trustManagers = tmf.getTrustManagers();
+            if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
+                throw new IllegalStateException("Unexpected default trust managers:" + Arrays.toString(trustManagers));
+            }
+            trustManager = (X509TrustManager) trustManagers[0];
+
+            sslContext.init(null, new TrustManager[]{trustManager}, null);
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return trustManager;
     }
 
     private static boolean isFilePart(ReadableArray part) {
