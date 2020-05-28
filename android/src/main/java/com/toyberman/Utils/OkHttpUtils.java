@@ -160,7 +160,7 @@ public class OkHttpUtils {
     private static X509TrustManager initSSLPinning(ReadableArray certs) {
         X509TrustManager trustManager = null;
         try {
-            sslContext = SSLContext.getInstance("SSL");
+            sslContext = SSLContext.getInstance("TLS");
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             String keyStoreType = KeyStore.getDefaultType();
             KeyStore keyStore = KeyStore.getInstance(keyStoreType);
