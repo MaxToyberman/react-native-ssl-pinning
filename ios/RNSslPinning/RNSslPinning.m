@@ -178,7 +178,6 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
         NSString *bodyString = [[NSString alloc] initWithData: responseObject encoding:NSUTF8StringEncoding];
         NSInteger statusCode = httpResp.statusCode;
         if (!error) {
-            NSLog(@"%@ %@", response, responseObject);
     
             NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
                           
