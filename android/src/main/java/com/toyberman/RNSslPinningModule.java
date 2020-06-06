@@ -22,7 +22,6 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -208,7 +207,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                 @Override
                 public void onResponse(Call call, Response okHttpResponse) throws IOException {
                     byte[] bytes = okHttpResponse.body().bytes();
-                    String stringResponse = new String(bytes, StandardCharsets.UTF_8);
+                    String stringResponse = new String(bytes, "UTF-8");
                     String responseType = "";
 
                     //build response headers map
