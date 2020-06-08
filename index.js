@@ -18,19 +18,21 @@ const fetch = (url, obj, callback) => {
 
         let data = err || res;
 
-        data.json = function() {
-            return Q.fcall(function() {
-                return JSON.parse(data.bodyString);
-            });
-        };
+        if (typeof data === 'object') {
+            data.json = function() {
+                return Q.fcall(function() {
+                    return JSON.parse(data.bodyString);
+                });
+            };
 
-        data.text = function() {
-            return Q.fcall(function() {
-                return data.bodyString;
-            });
-        };
+            data.text = function() {
+                return Q.fcall(function() {
+                    return data.bodyString;
+                });
+            };
 
-        data.url = url;
+            data.url = url;
+        }
 
         if (err) {
             deferred.reject(data);
