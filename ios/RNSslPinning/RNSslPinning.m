@@ -140,7 +140,14 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
     NSString * mimeType = [value objectForKey:@"type"];
     NSString * path = [value objectForKey:@"uri"] ? [value objectForKey:@"uri"] : [value objectForKey:@"path"];
     
-    [formData appendPartWithFileURL:[NSURL fileURLWithPath:path] name:key fileName:fileName mimeType:mimeType error:nil];
+    if([value objectForKey:@"data"]) {
+        NSString * data = [value objectForKey:@"data"];
+        NSData *nsdataFromBase64String = [[NSData alloc] initWithBase64EncodedString:data options:0];
+        [formData appendPartWithFileData:nsdataFromBase64String name:@"file" fileName:fileName mimeType:mimeType];
+    }
+    else {
+        [formData appendPartWithFileURL:[NSURL fileURLWithPath:path] name:key fileName:fileName mimeType:mimeType error:nil];
+    }
 }
 
 -(void) performMultipartRequest: (AFURLSessionManager*)manager obj:(NSDictionary *)obj url:(NSString *)url request:(NSMutableURLRequest*) request callback:(RCTResponseSenderBlock) callback formData:(NSDictionary*) formData {
