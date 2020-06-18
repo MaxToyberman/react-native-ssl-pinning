@@ -31,6 +31,7 @@ import javax.net.ssl.X509TrustManager;
 
 import okhttp3.CertificatePinner;
 import okhttp3.CookieJar;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -47,6 +48,7 @@ public class OkHttpUtils {
     private static final String HEADERS_KEY = "headers";
     private static final String BODY_KEY = "body";
     private static final String METHOD_KEY = "method";
+    private static final String PARAMS_KEY = "params";
     private static final String FILE = "file";
     private static final HashMap<String, OkHttpClient> clientsByDomain = new HashMap<>();
     private static OkHttpClient defaultClient = null;
@@ -270,7 +272,14 @@ public class OkHttpUtils {
             method = options.getString(METHOD_KEY);
         }
 
-        if (options.hasKey(BODY_KEY)) {
+        if (options.hasKey(PARAMS_KEY)) {
+            HttpUrl.Builder httpBuilder = HttpUrl.parse(hostname).newBuilder();
+            ReadableMap params = options.getMap(PARAMS_KEY);
+            HttpUrl url = Utilities.addGetParamsFromMap(params, httpBuilder);
+            return requestBuilder
+                    .url(url)
+                    .build();
+        } else if (options.hasKey(BODY_KEY)) {
 
             ReadableType bodyType = options.getType(BODY_KEY);
             switch (bodyType) {

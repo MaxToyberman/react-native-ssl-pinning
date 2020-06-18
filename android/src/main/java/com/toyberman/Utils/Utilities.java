@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import okhttp3.HttpUrl;
 import okhttp3.Request;
 
 /**
@@ -65,6 +66,17 @@ public class Utilities {
             String key = iterator.nextKey();
             builder.addHeader(key, map.getString(key));
         }
+    }
+
+    public static HttpUrl addGetParamsFromMap(ReadableMap map, HttpUrl.Builder builder) {
+
+        ReadableMapKeySetIterator iterator = map.keySetIterator();
+        while (iterator.hasNextKey()) {
+            String key = iterator.nextKey();
+            builder.addQueryParameter(key, map.getString(key));
+        }
+
+        return builder.build();
     }
 
 }
