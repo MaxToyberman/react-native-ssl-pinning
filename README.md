@@ -70,6 +70,16 @@ https://stackoverflow.com/questions/7885785/using-openssl-to-get-the-certificate
  - drag mycert.cer to Xcode project, mark your target and 'Copy items if needed'
  - (skip this if you are using certificate pinning) no extra step needed for public key pinning,  AFNetworking will extract the public key from the certificate. 
 
+If you are using AFNetworking as a Framework through CocoaPods, on XCode do:
+- on your project files tree, select the 'Pods' entry with the blue icon (not the 'Pods' folder);
+- with it opened, go to your 'Targets' (left) and search for 'RNSslPinning', select it;
+- select 'Build Phases' (tabs on top);
+- open 'Copy Bundle Resources';
+- click the '+' icon;
+- click 'Add Other...';
+- go to the path where your .cer is and select it, after that click 'Open';
+- AFNetworking will now be able to find your certificate.
+
 #### Android
  -  Only if using certificate pinning : place your .cer files under src/main/assets/
 
