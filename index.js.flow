@@ -16,6 +16,7 @@ export type Options = {
         certs: Array<string>
     },
     timeoutInterval?: number,
+    disableAllSecurity?: boolean
 }
 
 export type Response = {

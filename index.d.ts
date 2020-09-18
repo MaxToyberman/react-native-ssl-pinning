@@ -17,6 +17,7 @@ export namespace ReactNativeSSLPinning {
             certs: string[]
         },
         timeoutInterval?: number,
+        disableAllSecurity?: boolean
     }
 
     interface Response {
