@@ -156,6 +156,20 @@ fetch("https://publicobject.com", {
         Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
       }
 	})
+		
+```
+### Case Sensitive Headers
+```javascript
+
+ fetch("https://publicobject.com", {
+      method: "GET" ,
+      timeoutInterval: 10000, // milliseconds
+	  caseSensitiveHeaders: true, //in case you want headers to be case Sensitive
+      headers: {
+		Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
+		SOAPAction: "testAction",
+      }
+	})
 
 
 ```
