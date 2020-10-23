@@ -204,25 +204,25 @@ formData.append('file', {
 		name: encodeURIComponent(response.fileName),
 		fileName: encodeURIComponent(response.fileName),
 		type: this._extractFileType(response.fileName),
-		uri: response.uri,
-		data: response.data // needed for ios in base64
+		uri: response.uri
 })
 
 fetch(url, {
 	method: "POST" ,
 	timeoutInterval: communication_timeout, // milliseconds
 	body: {
-				formData: request,
+		formData: request,
 	},
 	sslPinning: {
 		certs: ["cert1","cert2"]
 	},
 	headers: {
-		'content-type': 'multipart/form-data; charset=UTF-8',
 		accept: 'application/json, text/plain, /',
 	}
 })
 
+don't add 'content-type': 'multipart/form-data; charset=UTF-8',
+Setting the Content-Type header manually means it's missing the boundary parameter. Remove that header and allow fetch to generate the full content type.
 ```
 
 ## License
