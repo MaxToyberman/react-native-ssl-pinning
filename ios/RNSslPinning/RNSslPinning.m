@@ -1,7 +1,5 @@
 //
 //  Created by Max Toyberman on 13/10/16.
-//  Copyright © 2016 Localz. All rights reserved.
-//
 
 #import "RNSslPinning.h"
 #import "AFNetworking.h"
