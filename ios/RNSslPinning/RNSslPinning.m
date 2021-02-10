@@ -143,9 +143,9 @@ RCT_EXPORT_METHOD(removeCookieByName: (NSString *)cookieName
 }
 
 -(void) performMultipartRequest: (AFURLSessionManager*)manager obj:(NSDictionary *)obj url:(NSString *)url request:(NSMutableURLRequest*) request callback:(RCTResponseSenderBlock) callback formData:(NSDictionary*) formData {
+    NSString * method = obj[@"method"] ? obj[@"method"] : @"POST";
     
-    
-    NSMutableURLRequest *formDataRequest = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:url parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> _formData) {
+    NSMutableURLRequest *formDataRequest = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:method URLString:url parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> _formData) {
         if([formData objectForKey:@"_parts"]){
             NSArray * parts = formData[@"_parts"];
             for (int i = 0; i < [parts count]; i++)
