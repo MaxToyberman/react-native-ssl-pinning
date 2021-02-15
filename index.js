@@ -22,6 +22,10 @@ const fetch = (url, obj, callback) => {
 
         let data = err || res;
 
+        if (typeof data === 'string') {
+            data = { bodyString: data }
+        }
+
         data.json = function() {
             return Q.fcall(function() {
                 return JSON.parse(data.bodyString);
