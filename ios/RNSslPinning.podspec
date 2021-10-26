@@ -18,7 +18,6 @@ Pod::Spec.new do |s|
 
 
   s.dependency "React"
-  s.dependency "AFNetworking", "~> 4.0"
 
 end
 

@@ -215,8 +215,11 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     AFSecurityPolicy *policy;
     BOOL pkPinning = [[obj objectForKey:@"pkPinning"] boolValue];
     BOOL disableAllSecurity = [[obj objectForKey:@"disableAllSecurity"] boolValue];
-    
-    NSSet *certificates = [AFSecurityPolicy certificatesInBundle:[NSBundle mainBundle]];
+    NSMutableArray *cert;
+    NSDictionary *sslPinning = [obj objectForKey:@"sslPinning"];
+    if (sslPinning != NULL) {
+        cert = [sslPinning mutableArrayValueForKey:@"certs"];
+    }
     
     // set policy (ssl pinning)
     if(disableAllSecurity){
@@ -225,16 +228,17 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
         policy.allowInvalidCertificates = true;
     }
     else if (pkPinning){
-        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey withPinnedCertificates:certificates];
+        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
     }
     else{
-        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate withPinnedCertificates:certificates];
+        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
     }
     
     AFURLSessionManager *manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
     manager.securityPolicy = policy;
     
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    manager.hashKeys = cert;
     
     
     if (obj[@"method"]) {
