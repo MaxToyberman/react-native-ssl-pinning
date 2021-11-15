@@ -9,6 +9,7 @@ export namespace ReactNativeSSLPinning {
 
     interface Options {
         body?: string | object,
+        responseType?: 'text' | 'base64',
         credentials?: string,
         headers?: Header;
         method?: 'DELETE' | 'GET' | 'POST' | 'PUT',
@@ -22,7 +23,8 @@ export namespace ReactNativeSSLPinning {
     }
 
     interface Response {
-        bodyString: string;
+        bodyString?: string;
+        data?: string;
         headers: Header;
         status: number;
         url: string;
