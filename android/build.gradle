@@ -32,10 +32,10 @@ repositories {
 
 dependencies {
    implementation "com.facebook.react:react-native:+"
-    implementation "com.squareup.okhttp3:okhttp:4.2.2"
+    implementation "com.squareup.okhttp3:okhttp:4.9.0"
     implementation "com.squareup.okio:okio:2.6.0"
     implementation "com.github.franmontiel:PersistentCookieJar:v1.0.1"
-    implementation "com.squareup.okhttp3:logging-interceptor:4.2.2"
-    implementation "com.squareup.okhttp3:okhttp-urlconnection:4.2.2"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.9.0"
+    implementation "com.squareup.okhttp3:okhttp-urlconnection:4.9.0"
 }
   
