@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+
 import okhttp3.Call;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
@@ -167,7 +171,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void fetch(String hostname, final ReadableMap options, final Callback callback) {
-
+        
         final WritableMap response = Arguments.createMap();
         String domainName;
         try {
@@ -185,7 +189,31 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                 if (certs != null && certs.size() == 0) {
                     throw new RuntimeException("certs array is empty");
                 }
+
                 client = OkHttpUtils.buildOkHttpClient(cookieJar, domainName, certs, options);
+                HostnameVerifier hostnameVerifier = (hostname1, session) -> {
+                    HostnameVerifier hv =
+                            HttpsURLConnection.getDefaultHostnameVerifier();
+                    // Hardwired intentionally (https://developer.android.com/training/articles/security-ssl)
+                    if (options.getMap(OPT_SSL_PINNING_KEY).hasKey("hostsList")) {
+                        ReadableArray hosts = options.getMap(OPT_SSL_PINNING_KEY).getArray("hostsList");
+                        if (hosts != null && hosts.size() == 0) {
+                            throw new RuntimeException("hosts array is empty");
+                        }
+                        boolean isVerifyAtLeastOne = false;
+                        for (int i = 0; i < hosts.size(); i++) {
+                            if(hv.verify(hosts.getString(i), session)) {
+                                isVerifyAtLeastOne = true;
+                                break;
+                            }
+                        }
+                        return isVerifyAtLeastOne;
+                    }
+                    throw new RuntimeException("hosts list was not found");
+                };
+                OkHttpClient.Builder builder = client.newBuilder();
+                builder.hostnameVerifier(hostnameVerifier);
+                client = builder.build();
             } else {
                 callback.invoke(new Throwable("key certs was not found"), null);
             }
