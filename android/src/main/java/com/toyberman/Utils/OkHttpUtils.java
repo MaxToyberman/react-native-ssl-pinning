@@ -88,21 +88,20 @@ public class OkHttpUtils {
 
 
             clientsByDomain.put(domainName, client);
-            return client;
+        } else {
+            client = clientsByDomain.get(domainName);
         }
 
-        client = clientsByDomain.get(domainName);
 
 
         if (options.hasKey("timeoutInterval")) {
             int timeout = options.getInt("timeoutInterval");
             // Copy to customize OkHttp for this request.
-            OkHttpClient client2 = client.newBuilder()
+            client = client.newBuilder()
                     .readTimeout(timeout, TimeUnit.MILLISECONDS)
                     .writeTimeout(timeout, TimeUnit.MILLISECONDS)
                     .connectTimeout(timeout, TimeUnit.MILLISECONDS)
                     .build();
-            return client2;
         }
 
 
