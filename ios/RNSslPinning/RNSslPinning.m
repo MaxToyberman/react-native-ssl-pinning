@@ -215,6 +215,7 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     AFSecurityPolicy *policy;
     BOOL pkPinning = [[obj objectForKey:@"pkPinning"] boolValue];
     BOOL disableAllSecurity = [[obj objectForKey:@"disableAllSecurity"] boolValue];
+    NSString *certBase64=[obj objectForKey:@"cert"];
     
     NSSet *certificates = [AFSecurityPolicy certificatesInBundle:[NSBundle mainBundle]];
     
@@ -226,6 +227,14 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     }
     else if (pkPinning){
         policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey withPinnedCertificates:certificates];
+    }
+    else if (certBase64) {
+        NSURL *certData = [NSURL URLWithString: [NSString stringWithFormat:@"data:application/octet-stream;base64,%@", certBase64]];
+        NSData *certRaw = [NSData dataWithContentsOfURL:certData];
+        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate
+            withPinnedCertificates:[NSSet setWithObject:certRaw]];
+        policy.validatesDomainName = false;
+        policy.allowInvalidCertificates = true;
     }
     else{
         policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate withPinnedCertificates:certificates];
