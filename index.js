@@ -1,7 +1,6 @@
-import { NativeModules } from 'react-native';
 import Q from 'q'
 
-const { RNSslPinning } = NativeModules;
+import RNSslPinning from './specs/NativeRNSslPinning';
 
 const fetch = (url, obj, callback) => {
     let deferred = Q.defer();

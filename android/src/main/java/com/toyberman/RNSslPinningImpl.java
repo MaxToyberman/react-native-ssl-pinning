@@ -1,24 +1,18 @@
 package com.toyberman;
 
 import android.os.Build;
-
 import androidx.annotation.NonNull;
-
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.network.ForwardingCookieHandler;
 import com.toyberman.Utils.OkHttpUtils;
-
 import org.json.JSONException;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import okhttp3.Call;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
@@ -39,13 +32,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class RNSslPinningModule extends ReactContextBaseJavaModule {
+public class RNSslPinningImpl {
 
-
-    private static final String OPT_SSL_PINNING_KEY = "sslPinning";
-    private static final String DISABLE_ALL_SECURITY = "disableAllSecurity";
-    private static final String RESPONSE_TYPE = "responseType";
-    private static final String KEY_NOT_ADDED_ERROR = "sslPinning key was not added";
+    public static final String NAME = "RNSslPinning";
 
     private final ReactApplicationContext reactContext;
     private final HashMap<String, List<Cookie>> cookieStore;
@@ -53,13 +42,15 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
     private ForwardingCookieHandler cookieHandler;
     private OkHttpClient client;
 
-    public RNSslPinningModule(ReactApplicationContext reactContext) {
-        super(reactContext);
+    public RNSslPinningImpl(ReactApplicationContext reactContext) {
         this.reactContext = reactContext;
         cookieStore = new HashMap<>();
         cookieHandler = new ForwardingCookieHandler(reactContext);
-        cookieJar = new CookieJar() {
+        setupCookieJar();
+    }
 
+    private void setupCookieJar() {
+        cookieJar = new CookieJar() {
             @Override
             public synchronized void saveFromResponse(HttpUrl url, List<Cookie> unmodifiableCookieList) {
                 for (Cookie cookie : unmodifiableCookieList) {
@@ -70,16 +61,14 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
             @Override
             public synchronized List<Cookie> loadForRequest(HttpUrl url) {
                 List<Cookie> cookies = cookieStore.get(url.host());
-                return cookies != null ? cookies : new ArrayList<Cookie>();
+                return cookies != null ? cookies : new ArrayList<>();
             }
 
             public void setCookie(HttpUrl url, Cookie cookie) {
-
                 final String host = url.host();
-
                 List<Cookie> cookieListForUrl = cookieStore.get(host);
                 if (cookieListForUrl == null) {
-                    cookieListForUrl = new ArrayList<Cookie>();
+                    cookieListForUrl = new ArrayList<>();
                     cookieStore.put(host, cookieListForUrl);
                 }
                 try {
@@ -90,16 +79,11 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
             }
 
             private void putCookie(HttpUrl url, List<Cookie> storedCookieList, Cookie newCookie) throws URISyntaxException, IOException {
-
                 Cookie oldCookie = null;
                 Map<String, List<String>> cookieMap = new HashMap<>();
-
                 for (Cookie storedCookie : storedCookieList) {
-
-                    // create key for comparison
                     final String oldCookieKey = storedCookie.name() + storedCookie.path();
                     final String newCookieKey = newCookie.name() + newCookie.path();
-
                     if (oldCookieKey.equals(newCookieKey)) {
                         oldCookie = storedCookie;
                         break;
@@ -109,49 +93,31 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                     storedCookieList.remove(oldCookie);
                 }
                 storedCookieList.add(newCookie);
-
                 cookieMap.put("Set-cookie", Collections.singletonList(newCookie.toString()));
                 cookieHandler.put(url.uri(), cookieMap);
             }
         };
-
     }
 
-    public static String getDomainName(String url) throws URISyntaxException {
-        URI uri = new URI(url);
-        String domain = uri.getHost();
-        return domain.startsWith("www.") ? domain.substring(4) : domain;
-    }
-
-
-    @ReactMethod
     public void getCookies(String domain, final Promise promise) {
         try {
             WritableMap map = new WritableNativeMap();
-
             List<Cookie> cookies = cookieStore.get(getDomainName(domain));
-
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     map.putString(cookie.name(), cookie.value());
                 }
             }
-
             promise.resolve(map);
         } catch (Exception e) {
             promise.reject(e);
         }
     }
 
-
-    @ReactMethod
     public void removeCookieByName(String cookieName, final Promise promise) {
-        List<Cookie> cookies = null;
-
         for (String domain : cookieStore.keySet()) {
             List<Cookie> newCookiesList = new ArrayList<>();
-
-            cookies = cookieStore.get(domain);
+            List<Cookie> cookies = cookieStore.get(domain);
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     if (!cookie.name().equals(cookieName)) {
@@ -161,13 +127,10 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                 cookieStore.put(domain, newCookiesList);
             }
         }
-
         promise.resolve(null);
     }
 
-    @ReactMethod
     public void fetch(String hostname, final ReadableMap options, final Callback callback) {
-
         final WritableMap response = Arguments.createMap();
         String domainName;
         try {
@@ -175,29 +138,27 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         } catch (URISyntaxException e) {
             domainName = hostname;
         }
-        if (options.hasKey(DISABLE_ALL_SECURITY) && options.getBoolean(DISABLE_ALL_SECURITY)) {
+
+        if (options.hasKey("disableAllSecurity") && options.getBoolean("disableAllSecurity")) {
             client = OkHttpUtils.buildDefaultOHttpClient(cookieJar, domainName, options);
-        }
-        // With ssl pinning
-        else if (options.hasKey(OPT_SSL_PINNING_KEY)) {
-            if (options.getMap(OPT_SSL_PINNING_KEY).hasKey("certs")) {
-                ReadableArray certs = options.getMap(OPT_SSL_PINNING_KEY).getArray("certs");
+        } else if (options.hasKey("sslPinning")) {
+            if (options.getMap("sslPinning").hasKey("certs")) {
+                ReadableArray certs = options.getMap("sslPinning").getArray("certs");
                 if (certs != null && certs.size() == 0) {
                     throw new RuntimeException("certs array is empty");
                 }
                 client = OkHttpUtils.buildOkHttpClient(cookieJar, domainName, certs, options);
             } else {
                 callback.invoke(new Throwable("key certs was not found"), null);
+                return;
             }
         } else {
-            //no ssl pinning
-            callback.invoke(new Throwable(KEY_NOT_ADDED_ERROR), null);
+            callback.invoke(new Throwable("sslPinning key was not added"), null);
             return;
         }
 
         try {
-            Request request = OkHttpUtils.buildRequest(this.reactContext, options, hostname);
-
+            Request request = OkHttpUtils.buildRequest(reactContext, options, hostname);
             client.newCall(request).enqueue(new okhttp3.Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
@@ -208,31 +169,18 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                 public void onResponse(Call call, Response okHttpResponse) throws IOException {
                     byte[] bytes = okHttpResponse.body().bytes();
                     String stringResponse = new String(bytes, "UTF-8");
-                    String responseType = "";
-
-                    //build response headers map
                     WritableMap headers = buildResponseHeaders(okHttpResponse);
-                    //set response status code
                     response.putInt("status", okHttpResponse.code());
-                    if (options.hasKey(RESPONSE_TYPE)) {
-                        responseType = options.getString(RESPONSE_TYPE);
-                    }
-                    switch (responseType) {
-                        case "base64":
-                            String base64;
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                                base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT);
-                            } else {
-                                base64 = Base64.getEncoder().encodeToString(bytes);
-                            }
-                            response.putString("data", base64);
-                            break;
-                        default:
-                            response.putString("bodyString", stringResponse);
-                            break;
+                    String responseType = options.hasKey("responseType") ? options.getString("responseType") : "";
+                    if ("base64".equals(responseType)) {
+                        String base64 = Build.VERSION.SDK_INT < Build.VERSION_CODES.O ?
+                                android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT) :
+                                Base64.getEncoder().encodeToString(bytes);
+                        response.putString("data", base64);
+                    } else {
+                        response.putString("bodyString", stringResponse);
                     }
                     response.putMap("headers", headers);
-
                     if (okHttpResponse.isSuccessful()) {
                         callback.invoke(null, response);
                     } else {
@@ -240,12 +188,9 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
                     }
                 }
             });
-
-
         } catch (JSONException e) {
             callback.invoke(e, null);
         }
-
     }
 
     @NonNull
@@ -259,9 +204,9 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
         return headers;
     }
 
-    @Override
-    public String getName() {
-        return "RNSslPinning";
+    private String getDomainName(String url) throws URISyntaxException {
+        URI uri = new URI(url);
+        String domain = uri.getHost();
+        return domain.startsWith("www.") ? domain.substring(4) : domain;
     }
-
 }

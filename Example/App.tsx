@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 
+import { fetch } from 'react-native-ssl-pinning';
 import {
   Colors,
   DebugInstructions,
@@ -62,6 +63,17 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  useEffect(() => { 
+    fetch('https://jsonplaceholder.typicode.com/posts/1', {
+      disableAllSecurity: true,
+      method: 'GET'
+    }).then(res => { 
+      console.log('res', res)
+    }).catch(e => {
+      console.log('error', e)
+    })
+
+  }, [])
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar

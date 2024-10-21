@@ -17,10 +17,23 @@
   "license": "MIT",
   "homepage": "https://github.com/MaxToyberman/react-native-ssl-pinning#README",
   "peerDependencies": {
-    "react-native": "*"
+    "react-native": "0.75.4"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MaxToyberman/react-native-ssl-pinning.git"
-  }
+  },
+  "codegenConfig": {
+    "name": "reactnativesslpinning",
+    "type": "modules",
+    "jsSrcsDir": "./specs",
+    "outputDir": {
+      "ios": "ios/generated",
+      "android": "android/generated"
+    },
+    "android": {
+      "javaPackageName": "com.toyberman"
+    }
+  },
+  "packageManager": "yarn@3.6.4"
 }
