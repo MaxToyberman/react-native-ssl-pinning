@@ -2,9 +2,10 @@
   "name": "react-native-ssl-pinning",
   "version": "1.5.7",
   "description": "React-Native Ssl pinning using OkHttp 3 in Android, and AFNetworking on iOS.",
-  "main": "index.js",
+  "main": "./lib/commonjs/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "bob build"
   },
   "keywords": [
     "react-native"
@@ -26,7 +27,7 @@
   "codegenConfig": {
     "name": "reactnativesslpinning",
     "type": "modules",
-    "jsSrcsDir": "./specs",
+    "jsSrcsDir": "./src/specs",
     "outputDir": {
       "ios": "ios/generated",
       "android": "android/generated"
@@ -35,5 +36,49 @@
       "javaPackageName": "com.toyberman"
     }
   },
-  "packageManager": "yarn@3.6.4"
+  "packageManager": "yarn@3.6.4",
+  "devDependencies": {
+    "react-native-builder-bob": "^0.30.2"
+  },
+  "source": "./index.js",
+  "module": "./lib/module/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./lib/module/index.js"
+      },
+      "require": {
+        "default": "./lib/commonjs/index.js"
+      }
+    }
+  },
+  "files": [
+    "src",
+    "lib",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
+  ],
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "commonjs",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ]
+    ]
+  },
+  "eslintIgnore": [
+    "node_modules/",
+    "lib/"
+  ]
 }

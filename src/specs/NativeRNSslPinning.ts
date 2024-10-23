@@ -4,7 +4,7 @@ import { Int32 } from 'react-native/Libraries/Types/CodegenTypes';
 
 import type {
     ReactNativeSSLPinning,
-  } from '../index.d.ts';
+  } from '../../index';
 
   enum ResponseType {
     Text = 'text',
