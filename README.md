@@ -76,13 +76,15 @@ https://stackoverflow.com/questions/7885785/using-openssl-to-get-the-certificate
  - For public key pinning the public key should be extracted by the following options
 : (replace google with your domain)
 	- ```openssl s_client -servername google.com -connect google.com:443 | openssl x509 -pubkey -noout | openssl rsa -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64```
+	- As per the android [SSLSocket](https://developer.android.com/reference/javax/net/ssl/SSLSocket) documentation by default it does not perform [hostname verification](https://developer.android.com/training/articles/security-ssl#WarningsSslSocket). So to perform the hostname verification it needed to pass `hostsList` (string array) as below and this is a mandatory param.
 	- Turn on pinning with a broken configuration and read the expected configuration when the connection fails.
 		```javascript
 		fetch("https://publicobject.com", {
 			method: "GET" ,
 			pkPinning: true,
 			sslPinning: {
-				certs: ["sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="] 
+				certs: ["sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="],
+				hostsList: ['publicobject.com', '*.publicobject.com'], 
 			}
 		})
 		```
@@ -111,7 +113,8 @@ fetch(url, {
 	body: body,
 	// your certificates array (needed only in android) ios will pick it automatically
 	sslPinning: {
-		certs: ["cert1","cert2"] // your certificates name (without extension), for example cert1.cer, cert2.cer
+		certs: ["cert1","cert2"], // your certificates name (without extension), for example cert1.cer, cert2.cer
+		hostsList: ['publicobject.com', '*.publicobject.com'] // host name list you are going to SSL pining verification
 	},
 	headers: {
 		Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
@@ -134,10 +137,12 @@ fetch("https://publicobject.com", {
       // your certificates array (needed only in android) ios will pick it automatically
       pkPinning: true,
       sslPinning: {
-        certs: ["sha256//r8udi/Mxd6pLO7y7hZyUMWq8YnFnIWXCqeHsTDRqy8=",
-        "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=",
-        "sha256/Vjs8r4z+80wjNcr1YKepWQboSIRi63WsWXhIMN+eWys="
-      ]
+        certs: [
+            "sha256//r8udi/Mxd6pLO7y7hZyUMWq8YnFnIWXCqeHsTDRqy8=",
+        	"sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=",
+        	"sha256/Vjs8r4z+80wjNcr1YKepWQboSIRi63WsWXhIMN+eWys="
+      	],
+        hostsList: ['publicobject.com', '*.publicobject.com'] // host name list you are going to SSL pining verification  
       },
       headers: {
         Accept: "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*", "e_platform": "mobile",
@@ -214,7 +219,8 @@ fetch(url, {
 		formData: request,
 	},
 	sslPinning: {
-		certs: ["cert1","cert2"]
+		certs: ["cert1","cert2"],
+		hostsList: ['publicobject.com', '*.publicobject.com'] // host name list you are going to SSL pining verification
 	},
 	headers: {
 		accept: 'application/json, text/plain, /',
