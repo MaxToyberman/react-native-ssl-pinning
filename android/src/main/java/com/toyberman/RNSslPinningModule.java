@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import okhttp3.Call;
 import okhttp3.Cookie;
@@ -48,7 +50,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
     private static final String KEY_NOT_ADDED_ERROR = "sslPinning key was not added";
 
     private final ReactApplicationContext reactContext;
-    private final HashMap<String, List<Cookie>> cookieStore;
+    private final Map<String, List<Cookie>> cookieStore;
     private CookieJar cookieJar = null;
     private ForwardingCookieHandler cookieHandler;
     private OkHttpClient client;
@@ -56,7 +58,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
     public RNSslPinningModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
-        cookieStore = new HashMap<>();
+        cookieStore = new ConcurrentHashMap<>();
         cookieHandler = new ForwardingCookieHandler(reactContext);
         cookieJar = new CookieJar() {
 
@@ -79,7 +81,7 @@ public class RNSslPinningModule extends ReactContextBaseJavaModule {
 
                 List<Cookie> cookieListForUrl = cookieStore.get(host);
                 if (cookieListForUrl == null) {
-                    cookieListForUrl = new ArrayList<Cookie>();
+                    cookieListForUrl = new CopyOnWriteArrayList<>();
                     cookieStore.put(host, cookieListForUrl);
                 }
                 try {
