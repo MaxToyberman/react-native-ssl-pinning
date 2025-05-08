@@ -13,7 +13,10 @@ const fetch = (url, obj, callback) => {
                 [obj.caseSensitiveHeaders ? key : key.toLowerCase()]: obj.headers[key]
             }), {})
     }
-
+    
+    if (obj.body && typeof obj.body === "object") {
+      obj.body = JSON.stringify(body);
+    }
 
     RNSslPinning.fetch(url, obj, (err, res) => {
         if (err && typeof err != 'object') {
