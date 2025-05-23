@@ -69,6 +69,30 @@ https://stackoverflow.com/questions/7885785/using-openssl-to-get-the-certificate
 #### iOS
  - drag mycert.cer to Xcode project, mark your target and 'Copy items if needed'
  - (skip this if you are using certificate pinning) no extra step needed for public key pinning,  AFNetworking will extract the public key from the certificate. 
+ - Using `der` base64 encoded:
+   - Create `der` certificate:
+	   ```bash
+	   openssl x509 -in cert.pem -outform der | base64
+	   ```
+   - To validate:
+	   ```bash
+	   echo "BASE64_CERT" | base64 -d | openssl x509 -inform der -text -noout
+	   ```
+   - Sample on JS side 
+	   ```javascript
+      fetch("https://publicobject.com", {
+        method: "GET" ,
+        pkPinning: true,
+        sslPinning: {
+          certs: [
+            "MIIC2DCCAcCgAwIBAgIBATANBgkqh....",
+            "MIIGvjCCBaagAwIBAgIQD7YO9foj3...."
+          ] 
+        }
+      })
+	   ```
+     Notes: iOS uses Base64 `der` certificates, while Android uses public key pinning.
+
 
 #### Android
  -  Only if using certificate pinning : place your .cer files under src/main/assets/
