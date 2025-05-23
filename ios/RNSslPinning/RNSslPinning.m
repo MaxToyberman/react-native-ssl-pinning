@@ -217,6 +217,35 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
     BOOL disableAllSecurity = [[obj objectForKey:@"disableAllSecurity"] boolValue];
     
     NSSet *certificates = [AFSecurityPolicy certificatesInBundle:[NSBundle mainBundle]];
+    NSDictionary *sslPinning = [obj objectForKey:@"sslPinning"];
+    NSArray<NSString *> *certs = nil;
+    NSMutableSet *certDataSet = [NSMutableSet set];
+    
+    if ([sslPinning isKindOfClass:[NSDictionary class]]) {
+        id certsValue = [sslPinning objectForKey:@"certs"];
+        if ([certsValue isKindOfClass:[NSArray class]]) {
+            BOOL allStrings = YES;
+            for (id item in (NSArray *)certsValue) {
+                if (![item isKindOfClass:[NSString class]]) {
+                    allStrings = NO;
+                    break;
+                }
+            }
+            if (allStrings) {
+                certs = (NSArray<NSString *> *)certsValue;
+            }
+        }
+    }
+
+    for (NSString *base64Cert in certs) {
+        NSData *certData = [[NSData alloc] initWithBase64EncodedString:base64Cert
+                                           options:NSDataBase64DecodingIgnoreUnknownCharacters];
+        if (certData) {
+            [certDataSet addObject:certData];
+        } else {
+            NSLog(@"⚠️ Failed to decode certificate.");
+        }
+    }
     
     // set policy (ssl pinning)
     if(disableAllSecurity){
@@ -225,7 +254,7 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
         policy.allowInvalidCertificates = true;
     }
     else if (pkPinning){
-        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey withPinnedCertificates:certificates];
+        policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate withPinnedCertificates:certDataSet];
     }
     else{
         policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate withPinnedCertificates:certificates];
