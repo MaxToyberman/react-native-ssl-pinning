@@ -82,7 +82,7 @@ public class OkHttpUtils {
                 clientBuilder.certificatePinner(certificatePinner);
             } else {
                 // ssl pinning
-                X509TrustManager manager = initSSLPinning(certs);
+                X509TrustManager manager = initSSLPinning(certs, options); // <-- MODIFICADO: passa options
                 clientBuilder
                         .sslSocketFactory(sslContext.getSocketFactory(), manager);
             }
@@ -167,7 +167,7 @@ public class OkHttpUtils {
 
     }
 
-    private static X509TrustManager initSSLPinning(ReadableArray certs) {
+    private static X509TrustManager initSSLPinning(ReadableArray certs, ReadableMap options) {
         X509TrustManager trustManager = null;
         try {
             sslContext = SSLContext.getInstance("TLS");
@@ -199,8 +199,35 @@ public class OkHttpUtils {
             }
             trustManager = (X509TrustManager) trustManagers[0];
 
-            sslContext.init(null, new TrustManager[]{trustManager}, null);
+            javax.net.ssl.KeyManager[] keyManagers = null;
 
+            if (options.hasKey("clientCertBase64") && options.hasKey("clientCertPassword")) {
+                String clientCertBase64 = options.getString("clientCertBase64");
+                String clientCertPassword = options.getString("clientCertPassword");
+
+                byte[] p12Bytes;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    p12Bytes = java.util.Base64.getDecoder().decode(clientCertBase64);
+                } else {
+                    p12Bytes = android.util.Base64.decode(clientCertBase64, android.util.Base64.DEFAULT);
+                }
+
+                KeyStore clientKeyStore = KeyStore.getInstance("PKCS12");
+                java.io.ByteArrayInputStream inputStream = new java.io.ByteArrayInputStream(p12Bytes);
+                try {
+                    clientKeyStore.load(inputStream, clientCertPassword.toCharArray());
+                } finally {
+                    inputStream.close();
+                }
+
+                javax.net.ssl.KeyManagerFactory kmf = javax.net.ssl.KeyManagerFactory.getInstance(
+                    javax.net.ssl.KeyManagerFactory.getDefaultAlgorithm()
+                );
+                kmf.init(clientKeyStore, clientCertPassword.toCharArray());
+                keyManagers = kmf.getKeyManagers();
+            }
+
+            sslContext.init(keyManagers, new TrustManager[]{trustManager}, null);
 
         } catch (Exception e) {
             e.printStackTrace();
